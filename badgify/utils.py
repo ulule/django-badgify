@@ -99,3 +99,52 @@ def chunks(l, n):
     """
     for i in xrange(0, len(l), n):
         yield l[i:i + n]
+
+
+def get_queryset_list(querysets):
+    """
+    Gets a QuerySet or a list of QuerySet, performs validation and return a
+    list of QuerySet.
+    """
+    from django.db.models.query import QuerySet, EmptyQuerySet
+    if not isinstance(querysets, (list, tuple)):
+        querysets = [querysets]
+    for qs in querysets:
+        if not isinstance(qs, (QuerySet, EmptyQuerySet)):
+            raise Exception('The supposed QuerySet is not a valid QuerySet. '
+                            'Must be an instance of QuerySet or EmptyQuerySet.')
+    return querysets
+
+
+def get_user_ids_for_badge(badge, user_querysets):
+    """
+    Returns a tuple of missing unique user IDs and number of IDS for the given
+    QuerySet list and badge.
+    """
+    from django.db.models.query import EmptyQuerySet
+    user_querysets = get_queryset_list(user_querysets)
+    existing_ids = badge.users.values_list('id', flat=True)
+    ids = []
+    for qs in user_querysets:
+        if isinstance(qs, EmptyQuerySet):
+            continue
+        qs_ids = qs.values_list('id', flat=True)
+        missing_ids = list(set(qs_ids) - set(existing_ids))
+        ids = ids + missing_ids
+    ids = list(set(ids))
+    return (ids, len(ids))
+
+
+def get_award_objects_for_badge(badge, user_ids, batch_size=500):
+    """
+    Returns a list of ``Award`` objects for the given ``Badge`` object and
+    ``User`` IDs (and optionally chuncked with the ``batch_size``).
+    """
+    from .models import Award
+    from .compat import get_user_model
+
+    User = get_user_model()
+
+    return [Award(user=user, badge=badge)
+                   for ids in chunks(user_ids, batch_size)
+                   for user in User.objects.filter(id__in=ids)]

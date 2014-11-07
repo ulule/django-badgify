@@ -5,12 +5,11 @@ import logging
 
 from django.db import IntegrityError
 from django.db.models import signals
-from django.db.models.query import EmptyQuerySet
 
 from . import registry
 from . import settings
 from .models import Badge, Award
-from .utils import chunks
+from .utils import get_user_ids_for_badge, get_award_objects_for_badge
 
 logger = logging.getLogger(__name__)
 
@@ -55,32 +54,28 @@ def sync_awards(**kwargs):
 
         recipe = registry.recipes[slug]
         badge = recipe.badge
-        user_qs = recipe.user_queryset
-        logger.debug('→ Start computing awards for badge %s...', badge.name)
+        user_querysets = recipe.user_queryset
 
-        if isinstance(user_qs, EmptyQuerySet):
-            continue
+        user_ids, user_ids_count = get_user_ids_for_badge(
+            badge=badge,
+            user_querysets=user_querysets)
 
-        current_ids = user_qs.values_list('id', flat=True)
-        existing_ids = badge.users.values_list('id', flat=True)
-        missing_ids = list(set(current_ids) - set(existing_ids))
-        missing_ids_count = len(missing_ids)
-
-        if not missing_ids_count:
+        if not user_ids_count:
             logger.debug('✓ No new awards for badge %s', badge.name)
             continue
 
         logger.debug('→ Found %s awards to save for badge %s...',
-            missing_ids_count,
+            user_ids_count,
             badge.name)
 
-        objects = [Award(user=user, badge=badge)
-                   for ids in chunks(missing_ids, batch_size)
-                   for user in user_qs.filter(id__in=ids)]
+        objects = get_award_objects_for_badge(
+            badge=badge,
+            user_ids=user_ids,
+            batch_size=batch_size)
 
         try:
             Award.objects.bulk_create(objects, batch_size=batch_size)
-            logger.debug('✓ Created %d awards for badge %s', missing_ids_count, badge.name)
+            logger.debug('✓ Created %d awards for badge %s', user_ids_count, badge.name)
             for obj in objects:
                 signals.post_save.send(
                     sender=obj.__class__,
@@ -88,7 +83,7 @@ def sync_awards(**kwargs):
                     created=True,
                     raw=True)
         except IntegrityError:
-            logger.error('✘ IntegrityError for %d awards', missing_ids_count)
+            logger.error('✘ IntegrityError for %d awards', user_ids_count)
 
 
 def sync_counts(**kwargs):
