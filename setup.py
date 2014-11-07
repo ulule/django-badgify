@@ -13,7 +13,7 @@ with open(os.path.join(root, 'README.rst')) as f:
 
 setup(
     name='django-badgify',
-    version='0.2.1',
+    version='0.1.0',
     description='Badges app for Django',
     long_description=README,
     author='Gilles Fabio',
