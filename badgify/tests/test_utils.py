@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from django.db import models
+from django.db.models.query import QuerySet
 from django.test import TestCase
 
 from .. import utils
@@ -77,3 +78,16 @@ class UtilsTestCase(TestCase, UserFixturesMixin):
         self.assertEqual(len(result), 20)
         for obj in result:
             self.assertTrue(isinstance(obj, Award))
+
+    def test_chunk_user_queryset_for_ids(self):
+        func = utils.chunk_user_queryset_for_ids
+        users, usernames = self.get_dummy_users(count=50)
+        for user in users:
+            user.save()
+        ids = User.objects.values_list('id', flat=True)
+        result = func(ids=ids, batch_size=10)
+        self.assertEqual(len(result), 5)
+        for qs in result:
+            self.assertTrue(isinstance(qs, QuerySet))
+        result = func(ids=ids, batch_size=50)
+        self.assertEqual(len(result), 1)

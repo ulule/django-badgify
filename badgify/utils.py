@@ -142,9 +142,17 @@ def get_award_objects_for_badge(badge, user_ids, batch_size=500):
     """
     from .models import Award
     from .compat import get_user_model
-
     User = get_user_model()
-
     return [Award(user=user, badge=badge)
                    for ids in chunks(user_ids, batch_size)
                    for user in User.objects.filter(id__in=ids)]
+
+
+def chunk_user_queryset_for_ids(ids, batch_size=500):
+    """
+    Returns a list of multiple User QuerySet chunked from ``ids`` (user IDs)
+    and ``batch_size`` (how many ids to give to ``SELECT IN``).
+    """
+    from .compat import get_user_model
+    User = get_user_model()
+    return [User.objects.filter(id__in=ids) for chunked_ids in chunks(ids, batch_size)]
