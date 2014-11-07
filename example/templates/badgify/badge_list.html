@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}
+  {% trans "Badges" %}
+{% endblock %}
+
+{% block content %}
+<div class="badgify-badge-list">
+  <h2>{% trans "Badges" %}</h2>
+  {% if not badges %}
+  <div class="alert alert-success" role="alert">
+    <p>{% trans "No badges yet." %}</p>
+  </div>
+  {% else %}
+  <div class="row">
+    {% for badge in badges %}
+    <div class="col-md-3">
+      <div class="thumbnail text-center">
+        <a href="{{ badge.get_absolute_url }}">
+          <img src="{% if badge.image %}{{ badge.image }}{% else %}http://placehold.it/140x140{% endif %}" alt="{{ badge.name }}">
+        </a>
+        <div class="caption">
+          <h4 class="text-center">{{ badge.name }}</h4>
+          <p class="text-muted">{{ badge.description }}</p>
+          <p class="text-center"><span class="glyphicon glyphicon-user"></span> {{ badge.users_count }}</p>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+    {% include "_pagination.html" %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+

@@ -1,0 +1,349 @@
+django-badgify
+==============
+
+Badge app for Django.
+
+.. image:: https://secure.travis-ci.org/ulule/django-badgify.png?branch=master
+    :alt: Build Status
+    :target: http://travis-ci.org/ulule/django-badgify
+
+Installation
+------------
+
+.. code-block:: bash
+
+    $ pip install django-badgify
+
+Usage
+-----
+
+Add ``badgify`` to your ``INSTALLED_APPS`` in ``settings.py``:
+
+.. code-block:: python
+
+    INSTALLED_APPS = (
+        # ...
+        'badgify',
+    )
+
+Synchronize the database:
+
+.. code-block:: bash
+
+    $ python manage.py syncdb
+    $ python manage.py migrate
+
+Create a ``badgify_recipes.py`` file in your Django application:
+
+.. code-block:: bash
+
+    $ cd path/to/your/django/app
+    $ touch badgify_recipes.py
+
+Open this file and import `badgify.recipe.BaseRecipe` class and `badgify` module:
+
+.. code-block:: python
+
+    from badgify.recipe import BaseRecipe
+    import badgify
+
+Create and register your recipe classes:
+
+.. code-block:: python
+
+    class PythonLoverRecipe(BaseRecipe):
+        pass
+
+
+    class JSLoverRecipe(BaseRecipe):
+        pass
+
+
+    # Per class
+    badgify.register(PythonLoverRecipe)
+    badgify.register(JSLoverRecipe)
+
+    # All at once in a list
+    badgify.register([PythonLoverRecipe, JSLoverRecipe])
+
+A recipe class must implement:
+
+* ``name`` class attribute: the badge name
+* ``slug`` class attribute: the badge slug
+* ``description`` class attribute: the badge description
+* ``image`` property: the badge image (must be a ``File``)
+* ``user_queryset`` property: a ``AUTH_USER_MODEL`` QuerySet for the badge
+
+Example:
+
+.. code-block:: python
+
+    from django.contrib.staticfiles.storage import staticfiles_storage
+
+    from badgify.recipe import BaseRecipe
+    import badgify
+
+    from .models import MyCustomUser
+
+
+    class PythonLoverRecipe(BaseRecipe):
+        """
+        People loving Python.
+        """
+        name = 'Python Lover'
+        slug = 'python-lover'
+        description = 'People loving Python programming language'
+
+        @property
+        def image(self):
+            return staticfiles_storage.open('python-lover.png')
+
+        @property
+        def user_queryset(self):
+            return MyCustomUser.objects.filter(love_python=True)
+
+
+    class JSLoverRecipe(BaseRecipe):
+        """
+        People loving JS.
+        """
+        name = 'JS Lover'
+        slug = 'js-lover'
+        description = 'People loving JS programming language'
+
+        @property
+        def image(self):
+            return staticfiles_storage.open('js-lover.png')
+
+        @property
+        def user_queryset(self):
+            return MyCustomUser.objects.filter(love_js=True)
+
+    class JavaLoverRecipe(BaseRecipe):
+        """
+        People loving Java.
+        """
+        name = 'JS Lover'
+        slug = 'js-lover'
+        description = 'People loving JS programming language'
+
+        @property
+        def image(self):
+            return staticfiles_storage.open('js-lover.png')
+
+        @property
+        def user_queryset(self):
+            return MyCustomUser.objects.none()
+
+
+    badgify.register([
+        PythonLoverRecipe,
+        JSLoverRecipe,
+        JavaLoverRecipe,
+    ])
+
+Once you have implemented and registered your recipe classes, you can invoke
+available commands bellow:
+
+.. code-block:: bash
+
+    # Update badges
+    $ python manage.py badgify_sync badges
+
+    # Update awards
+    $ python manage.py badgify_sync awards
+
+    # Update denormalized fields (to avoid calling .count() in templates)
+    $ python manage.py badgify_sync counts
+
+    # Lazy? This command invoke "badges", "awards" and "counts"
+    # ("counts" only if BADGIFY_ENABLE_BADGE_USERS_COUNT_SIGNAL setting is False).
+    $ python manage.py badgify_sync
+
+Commands
+--------
+
+``badgify_sync``
+~~~~~~~~~~~~~~~~
+
+Takes three sub-commands:
+
+``badges``
+    Loads registered recipes and create related badges from recipe's ``name``,
+    ``slug``, ``description`` and ``image`` attributes/properties.
+
+``awards``
+    Loads registered recipes and create awards for objects returned by recipe's
+    ``user_queryset`` property. For manual assignment, return ``User.objects.none()``.
+
+    **Options are:**
+
+    ``batch_size``
+        How many objects to create in a single query.
+        Defaults to ``30000``.
+
+``counts``
+    Loads registered recipes and denormalizes ``badge.users.count()`` into
+    ``Badge.users_count`` field. This can be a huge performance-saver.
+
+Templatetags
+------------
+
+``badgify_badges``
+~~~~~~~~~~~~~~~~~~
+
+Takes two optional arguments:
+
+* ``user``: a ``User`` object
+* ``username``: a ``User`` username
+
+Without any argument, displays all badges. Otherwise, badges awarded by the given user.
+
+.. code-block:: html+django
+
+    {% load badgify_tags %}
+
+    {% badgify_badges as badges %}
+    {% badgify_badges username="johndoe" as badges %}
+    {% badgify_badges user=user as badges %}
+
+    {% for badge in badges %}
+        {{ badge.name }}
+    {% endfor %}
+
+Custom Models
+-------------
+
+**django-badgify** lets you define your own model classes for ``Badge`` and ``Award``
+models. That can be pretty useful for i18n stuff
+(example: `django-transmetta <https://github.com/Yaco-Sistemas/django-transmeta/>`_ support),
+adding custom fields, methods or properties.
+
+Your models must inherit from ``badgify.models.base`` model classes:
+
+.. code-block:: python
+
+    # yourapp.models
+
+    from badgify.models import base
+
+
+    class Badge(base.Badge):
+        # you own fields / logic here
+        class Meta(base.Badge.Meta):
+            abstract = False
+
+
+    class Award(base.Award):
+        # you own fields / logic here
+        class Meta(base.Award.Meta):
+            abstract = False
+
+
+Then tell the application to use them in place of default ones in your ``settings.py`` module:
+
+.. code-block:: python
+
+    # yourapp.settings
+
+    BADGIFY_BADGE_MODEL = 'yourapp.models.Badge'
+    BADGIFY_AWARD_MODEL = 'yourapp.models.Award'
+
+Settings
+--------
+
+You can altere the application behavior by defining settings in your ``settings.py``
+module. All application settings are prefixed with ``BADGIFY_``.
+
+``BADGIFY_BADGE_IMAGE_UPLOAD_ROOT``
+    The root path for ``Badge``  model ``ImageField``.
+
+``BADGIFY_BADGE_IMAGE_UPLOAD_URL``
+    The URL ``Badge``  model ``ImageField``.
+
+``BADGIFY_BADGE_IMAGE_UPLOAD_STORAGE``
+    Your own ``django.core.files.storage`` storage instance.
+
+``BADGIFY_BADGE_LIST_VIEW_PAGINATE_BY``
+    Number of badges to display on the badge list page.
+
+``BADGIFY_BADGE_DETAIL_VIEW_PAGINATE_BY``
+    Number of awarded users to display on the badge detail page.
+
+``BADGIFY_BADGE_MODEL``
+    Your own concrete ``Badge`` model class as module path.
+    Example: ``yourapp.models.Badge``.
+
+``BADGIFY_AWARD_MODEL``
+    Your own concrete ``Award`` model class as module path.
+    Example: ``yourapp.models.Award``.
+
+``BADGIFY_AWARD_BULK_CREATE_BATCH_SIZE``
+    How many ``Award`` objects to create in a single query.
+
+``BADGIFY_ENABLE_BADGE_USERS_COUNT_SIGNAL``
+    Auto-increment ``badge.users_count`` field when a new award is created.
+    Defaults to ``False`` (you need to invoke ``badgify_sync counts`` explicitly
+    to auto-increment this field). If you set it to ``True``, you don't need
+    to invoke ``badgify_sync counts`` anymore. It depends on your needs and on
+    the amount of awards to create to improve performances.
+
+Development
+-----------
+
+Installation
+~~~~~~~~~~~~
+
+Install `VirtualBox <https://www.virtualbox.org/>`_ and
+`Vagrant <https://www.vagrantup.com/>`_.
+
+Then, let's go:
+
+.. code-block:: bash
+
+    $ git clone https://github.com/ulule/django-badgify.git
+    $ cd django-badgify
+    $ vagrant up & vagrant ssh
+    $ cd /vagrant
+    $ make install
+    $ source .venv/bin/activate
+
+Example
+~~~~~~~
+
+Run the example project:
+
+.. code-block:: bash
+
+    $ vagrant ssh
+    $ cd /vagrant
+    $ source .venv/bin/activate
+    $ make example
+
+Tests
+~~~~~
+
+Execute the test suite:
+
+.. code-block:: bash
+
+    $ vagrant ssh
+    $ cd /vagrant
+    $ tox
+
+Compatibility
+-------------
+
+This package is compatible with:
+
+- python2.6, django1.5
+- python2.6, django1.6
+- python2.7, django1.5
+- python2.7, django1.6
+- python2.7, django1.7
+- python3.3, django1.5
+- python3.3, django1.6
+- python3.3, django1.7
+- python3.4, django1.5
+- python3.4, django1.6
+- python3.4, django1.7

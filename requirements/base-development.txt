@@ -1,0 +1,7 @@
+-r base.txt
+
+Sphinx
+coverage==3.6
+flake8
+RandomWords
+tox

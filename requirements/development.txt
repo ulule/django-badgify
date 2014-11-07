@@ -1,0 +1,3 @@
+-r base-development.txt
+
+Django>=1.7

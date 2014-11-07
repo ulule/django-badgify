@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}
+  {{ badge.name }}
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-9">
+    <div class="row">
+      {% for user in awarded_users %}
+      <div class="col-md-2">
+        <div class="user text-center">
+          <a href="{% url 'home' %}">
+            <img src="http://placehold.it/80x80" alt="{{ user.username }}" class="img-circle">
+          </a>
+          <div class="caption">
+            <h5 class="text-center">{{ user.username }}</h5>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% include "_pagination.html" %}
+  </div>
+  <div class="col-md-3">
+    <div class="thumbnail text-center">
+      <h1>{{ badge.name }}</h1>
+      <img src="{% if badge.image %}{{ badge.image }}{% else %}http://placehold.it/150x150{% endif %}" alt="{{ badge.name }}">
+      <p class="text-muted">{{ badge.description }}</p>
+      <p class="text-center"><span class="glyphicon glyphicon-user"></span> {{ badge.users_count }}</p>
+    </div>
+  </div>
+</div>
+{% endblock %}

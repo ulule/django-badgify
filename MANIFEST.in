@@ -1,0 +1,5 @@
+include README.rst
+include MANIFEST.in
+include Makefile
+include LICENSE
+include AUTHORS

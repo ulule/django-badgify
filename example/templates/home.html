@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% load i18n badgify_tags %}
+
+{% block title %}
+  Home
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-8">
+    <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
+    tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
+    quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+    consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
+    cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
+    proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+
+    <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
+    tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
+    quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+    consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
+    cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
+    proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+
+    <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
+    tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
+    quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+    consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
+    cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
+    proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+  </div>
+  <div class="col-md-4">
+    {% badgify_badges as badges %}
+    <div class="badgify-badges">
+      <div class="badgify-badges-header">
+        <h5>{% trans "Badges" %}</h5>
+      </div>
+      <div class="badgify-badges-content">
+        {% if badges %}
+        <ul>
+          {% for badge in badges %}
+          <li>
+            <a href="{{ badge.get_absolute_url }}">
+              <img src="{% if badge.image %}{{ badge.image }}{% else %}http://placehold.it/48x48{% endif %}" alt="{{ badge.name }}">
+            </a>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p>{% trans "Oops. No badge yet." %}</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
