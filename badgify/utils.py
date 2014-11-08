@@ -1,8 +1,15 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
+import logging
+
 from django.core import exceptions
 from django.utils.importlib import import_module
 
 from . import settings
+
+
+logger = logging.getLogger(__name__)
 
 
 CLASS_PATH_ERROR = 'django-badgify is unable to interpret settings value for %s. '\
@@ -125,6 +132,9 @@ def get_user_ids_for_badge(badge, user_querysets):
     user_querysets = get_queryset_list(user_querysets)
     existing_ids = badge.users.values_list('id', flat=True)
     ids = []
+    logger.debug('→ Badge %s: retrieving user ids from %d queryset(s)...',
+        badge.slug,
+        len(user_querysets))
     for qs in user_querysets:
         if isinstance(qs, EmptyQuerySet):
             continue

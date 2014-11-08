@@ -34,11 +34,11 @@ def sync_badges(**kwargs):
                     image=recipe.image)
                 new_badges.append(badge)
             except IntegrityError:
-                logger.debug('✘ IntegrityError for badge: %s', slug)
+                logger.debug('✘ Badge %s: IntegrityError', slug)
 
     if len(new_badges):
         for badge in new_badges:
-            logger.debug('✓ Created new badge: %s', badge.name)
+            logger.debug('✓ Badge %s: created', badge.slug)
 
 
 def sync_awards(**kwargs):
@@ -56,17 +56,19 @@ def sync_awards(**kwargs):
         badge = recipe.badge
         user_querysets = recipe.user_queryset
 
+        logger.debug('→ Badge %s: syncing awards...', badge.slug)
+
         user_ids, user_ids_count = get_user_ids_for_badge(
             badge=badge,
             user_querysets=user_querysets)
 
         if not user_ids_count:
-            logger.debug('✓ No new awards for badge %s', badge.name)
+            logger.debug('✓ Badge %s: no new awards', badge.slug)
             continue
 
-        logger.debug('→ Found %s awards to save for badge %s...',
-            user_ids_count,
-            badge.name)
+        logger.debug('→ Badge %s: found %d awards to save',
+            badge.slug,
+            user_ids_count)
 
         objects = get_award_objects_for_badge(
             badge=badge,
@@ -75,7 +77,7 @@ def sync_awards(**kwargs):
 
         try:
             Award.objects.bulk_create(objects, batch_size=batch_size)
-            logger.debug('✓ Created %d awards for badge %s', user_ids_count, badge.name)
+            logger.debug('✓ Badge %s: created %d awards', badge.slug, user_ids_count)
             for obj in objects:
                 signals.post_save.send(
                     sender=obj.__class__,
@@ -83,7 +85,7 @@ def sync_awards(**kwargs):
                     created=True,
                     raw=True)
         except IntegrityError:
-            logger.error('✘ IntegrityError for %d awards', user_ids_count)
+            logger.error('✘ Badge %s: IntegrityError for %d awards', badge.slug, user_ids_count)
 
 
 def sync_counts(**kwargs):
@@ -94,7 +96,7 @@ def sync_counts(**kwargs):
 
         recipe = registry.recipes[slug]
         badge = recipe.badge
-        logger.debug('→ Start computing counts for badge %s...', badge.name)
+        logger.debug('→ Badge %s: syncing counts...', badge.slug)
 
         old_value = badge.users_count
         new_value = badge.users.count()
@@ -102,12 +104,12 @@ def sync_counts(**kwargs):
         if old_value != new_value:
             badge.users_count = new_value
             badge.save()
-            logger.debug('✓ Updated users count for badge %s (from %d to %d)',
-                badge.name,
+            logger.debug('✓ Badge %s: updated users count (from %d to %d)',
+                badge.slug,
                 old_value,
                 new_value)
             continue
 
-        logger.debug('✓ Users count for badge %s is already up-to-date (%d)',
-            badge.name,
+        logger.debug('✓ Badge %s: users count up-to-date (%d)',
+            badge.slug,
             new_value)
