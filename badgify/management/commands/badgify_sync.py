@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import collections
 from optparse import make_option
 
 from django.core.management.base import BaseCommand, CommandError
@@ -7,11 +8,11 @@ from badgify.commands import sync_badges, sync_awards, sync_counts
 from badgify import settings
 
 
-COMMANDS = {
-    'badges': sync_badges,
-    'awards': sync_awards,
-    'counts': sync_counts,
-}
+COMMANDS = collections.OrderedDict([
+    ('badges', sync_badges),
+    ('awards', sync_awards),
+    ('counts', sync_counts),
+])
 
 
 class Command(BaseCommand):
