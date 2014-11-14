@@ -47,10 +47,12 @@ def sync_awards(**kwargs):
     """
     Loads registered recipes and synchronizes awards.
     """
-    badge = kwargs.get('badge', None)
+    badges = kwargs.get('badges', None)
     batch_size = kwargs.get('batch_size', None)
-    if badge:
-        _sync_awards_for_badge(badge, batch_size)
+    if badges:
+        badges = [b for b in badges.split(' ') if b]
+        for badge in badges:
+            _sync_awards_for_badge(badge, batch_size)
         return
     for slug in registry.recipes:
         _sync_awards_for_badge(slug, batch_size)

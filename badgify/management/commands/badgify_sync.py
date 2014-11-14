@@ -26,9 +26,9 @@ class Command(BaseCommand):
             action='store',
             dest='batch_size',
             type='int'),
-        make_option('--badge',
+        make_option('--badges',
             action='store',
-            dest='badge'))
+            dest='badges'))
 
     def handle(self, *args, **options):
         if not len(args):
