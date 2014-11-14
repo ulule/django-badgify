@@ -1,3 +1,4 @@
+-r compile.txt
 -r base-development.txt
 
 Django>=1.7
