@@ -7,7 +7,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.network :forwarded_port, guest: 8000, host: 8000
   config.vm.provision 'shell', path: 'scripts/vagrant-bootstrap.sh'
   config.vm.provider 'virtualbox' do |v|
-    v.customize ['modifyvm', :id, '--memory', '512']
+    v.name = 'django_badgify'
+    v.memory = 2048
+    v.cpus = 2
     v.customize ['setextradata', :id, 'VBoxInternal2/SharedFoldersEnableSymlinksCreate/v-root', '1']
   end
 end
