@@ -13,6 +13,16 @@ class BadgifyRegistry(object):
         """
         self._registry = {}
 
+    def get_recipe(self, slug):
+        """
+        Returns the recipe instance for the given badge slug.
+        If badge has not been registered, raises ``BadgeNotFound``.
+        """
+        from .exceptions import BadgeNotFound
+        if self._registry.has_key(slug):
+            return self.recipes[slug]
+        raise BadgeNotFound()
+
     def register(self, recipe):
         """
         Registers a new recipe class.
