@@ -69,7 +69,8 @@ LOGGING = {
     },
 }
 
-if django.VERSION < (1, 7):
+if django.VERSION < (1, 6):
     TEST_RUNNER = 'discover_runner.DiscoverRunner'
+if django.VERSION < (1, 7):
     SOUTH_MIGRATION_MODULES = {'badgify': 'badgify.south_migrations'}
     INSTALLED_APPS.append('south')
