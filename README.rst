@@ -182,6 +182,12 @@ Takes three sub-commands:
         How many objects to create in a single query.
         Defaults to ``30000``.
 
+    ``badges``
+        Only creates awards for the given badge(s). For more than one badge,
+        use single or double quotes and separate them with a space.
+        Example with one badge: ``badgify_sync awards --badges my-badge``
+        Example with multiple badges: ``badgify_sync awards --badges "badge-one badge-two"``
+
 ``counts``
     Loads registered recipes and denormalizes ``badge.users.count()`` into
     ``Badge.users_count`` field. This can be a huge performance-saver.
