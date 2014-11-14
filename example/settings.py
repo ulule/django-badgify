@@ -3,6 +3,7 @@ import os
 
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+PROJECT_DIR = os.path.dirname(__file__)
 
 SECRET_KEY = 'l8h=t&zq%7f_vv8ge3@0jw^qgvedz*82j2$2rkbr^)i*y0p&x('
 DEBUG = True
@@ -38,7 +39,7 @@ WSGI_APPLICATION = 'example.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'NAME': os.path.join(PROJECT_DIR, 'db.sqlite3'),
     }
 }
 
@@ -49,14 +50,14 @@ USE_L10N = True
 USE_TZ = True
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, '..', 'badgify', 'tests', 'media')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'badgify', 'tests', 'media')
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, '..', 'badgify', 'tests', 'static')
+STATIC_ROOT = os.path.join(BASE_DIR, 'badgify', 'tests', 'static')
 
 AUTH_USER_MODEL = 'example.User'
 
 TEMPLATE_DIRS = (
-    os.path.join(os.path.dirname(__file__), 'templates'),
+    os.path.join(PROJECT_DIR, 'templates'),
 )
 
 LOGGING = {
@@ -81,6 +82,11 @@ LOGGING = {
             'propagate': True,
         },
         'example.fixtures': {
+            'handlers': ['stream'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'badgify.commands': {
             'handlers': ['stream'],
             'level': 'DEBUG',
             'propagate': True,
