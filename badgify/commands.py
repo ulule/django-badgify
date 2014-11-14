@@ -3,11 +3,13 @@ from __future__ import unicode_literals
 
 import logging
 
+from django.core.management.base import CommandError
 from django.db import IntegrityError
 from django.db.models import signals
 
 from . import registry
 from . import settings
+from .exceptions import BadgeNotFound
 from .models import Badge, Award
 from .utils import get_user_ids_for_badge, get_award_objects_for_badge
 
@@ -45,47 +47,13 @@ def sync_awards(**kwargs):
     """
     Loads registered recipes and synchronizes awards.
     """
+    badge = kwargs.get('badge', None)
     batch_size = kwargs.get('batch_size', None)
-
-    if batch_size is None:
-        batch_size = settings.AWARD_BULK_CREATE_BATCH_SIZE
-
+    if badge:
+        _sync_awards_for_badge(badge, batch_size)
+        return
     for slug in registry.recipes:
-
-        recipe = registry.recipes[slug]
-        badge = recipe.badge
-        user_querysets = recipe.user_queryset
-
-        logger.debug('→ Badge %s: syncing awards...', badge.slug)
-
-        user_ids, user_ids_count = get_user_ids_for_badge(
-            badge=badge,
-            user_querysets=user_querysets)
-
-        if not user_ids_count:
-            logger.debug('✓ Badge %s: no new awards', badge.slug)
-            continue
-
-        logger.debug('→ Badge %s: found %d awards to save',
-            badge.slug,
-            user_ids_count)
-
-        objects = get_award_objects_for_badge(
-            badge=badge,
-            user_ids=user_ids,
-            batch_size=batch_size)
-
-        try:
-            Award.objects.bulk_create(objects, batch_size=batch_size)
-            logger.debug('✓ Badge %s: created %d awards', badge.slug, user_ids_count)
-            for obj in objects:
-                signals.post_save.send(
-                    sender=obj.__class__,
-                    instance=obj,
-                    created=True,
-                    raw=True)
-        except IntegrityError:
-            logger.error('✘ Badge %s: IntegrityError for %d awards', badge.slug, user_ids_count)
+        _sync_awards_for_badge(slug, batch_size)
 
 
 def sync_counts(**kwargs):
@@ -113,3 +81,51 @@ def sync_counts(**kwargs):
         logger.debug('✓ Badge %s: users count up-to-date (%d)',
             badge.slug,
             new_value)
+
+
+def _sync_awards_for_badge(slug, batch_size):
+    """
+    Synchronizes awards for a given badge (takes the badge slug).
+    """
+    if batch_size is None:
+        batch_size = settings.AWARD_BULK_CREATE_BATCH_SIZE
+
+    try:
+        recipe = registry.get_recipe(slug)
+    except BadgeNotFound:
+        logger.error('✘ Badge "%s" has not been registered', slug)
+        return
+
+    badge = recipe.badge
+    user_querysets = recipe.user_queryset
+
+    logger.debug('→ Badge %s: syncing awards...', badge.slug)
+
+    user_ids, user_ids_count = get_user_ids_for_badge(
+        badge=badge,
+        user_querysets=user_querysets)
+
+    if not user_ids_count:
+        logger.debug('✓ Badge %s: no new awards', badge.slug)
+        return
+
+    logger.debug('→ Badge %s: found %d awards to save',
+        badge.slug,
+        user_ids_count)
+
+    objects = get_award_objects_for_badge(
+        badge=badge,
+        user_ids=user_ids,
+        batch_size=batch_size)
+
+    try:
+        Award.objects.bulk_create(objects, batch_size=batch_size)
+        logger.debug('✓ Badge %s: created %d awards', badge.slug, user_ids_count)
+        for obj in objects:
+            signals.post_save.send(
+                sender=obj.__class__,
+                instance=obj,
+                created=True,
+                raw=True)
+    except IntegrityError:
+        logger.error('✘ Badge %s: IntegrityError for %d awards', badge.slug, user_ids_count)
