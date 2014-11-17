@@ -86,7 +86,7 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': True,
         },
-        'badgify.commands': {
+        'badgify': {
             'handlers': ['stream'],
             'level': 'DEBUG',
             'propagate': True,
