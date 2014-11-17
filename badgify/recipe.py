@@ -18,6 +18,9 @@ class BaseRecipe(object):
     # Badge.description
     description = None
 
+    # The default Badge QuerySet used to retrieve the related badge
+    queryset = Badge.objects.all()
+
     @property
     def image(self):
         raise NotImplementedError('Image must be implemented')
@@ -28,4 +31,4 @@ class BaseRecipe(object):
 
     @cached_property
     def badge(self):
-        return Badge.objects.get(slug=self.slug)
+        return self.queryset.get(slug=self.slug)

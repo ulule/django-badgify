@@ -114,55 +114,75 @@ def get_queryset_list(querysets):
     list of QuerySet.
     """
     from django.db.models.query import QuerySet, EmptyQuerySet
+
     if not isinstance(querysets, (list, tuple)):
         querysets = [querysets]
+
     for qs in querysets:
         if not isinstance(qs, (QuerySet, EmptyQuerySet)):
             raise Exception('The supposed QuerySet is not a valid QuerySet. '
                             'Must be an instance of QuerySet or EmptyQuerySet.')
+
     return querysets
 
 
-def get_user_ids_for_badge(badge, user_querysets):
+def get_user_ids_for_badge(badge, user_querysets, connection=None):
     """
     Returns a tuple of missing unique user IDs and number of IDS for the given
     QuerySet list and badge.
     """
+    from django.db import DEFAULT_DB_ALIAS
     from django.db.models.query import EmptyQuerySet
+
+    connection = connection if connection else DEFAULT_DB_ALIAS
     user_querysets = get_queryset_list(user_querysets)
     existing_ids = badge.users.values_list('id', flat=True)
+
     ids = []
     logger.debug('→ Badge %s: retrieving user ids from %d queryset(s)...',
         badge.slug,
         len(user_querysets))
+
     for qs in user_querysets:
         if isinstance(qs, EmptyQuerySet):
             continue
-        qs_ids = qs.values_list('id', flat=True)
+        qs_ids = qs.using(connection).values_list('id', flat=True)
         missing_ids = list(set(qs_ids) - set(existing_ids))
         ids = ids + missing_ids
+
     ids = list(set(ids))
+
     return (ids, len(ids))
 
 
-def get_award_objects_for_badge(badge, user_ids, batch_size=500):
+def get_award_objects_for_badge(badge, user_ids, connection=None, batch_size=500):
     """
     Returns a list of ``Award`` objects for the given ``Badge`` object and
     ``User`` IDs (and optionally chuncked with the ``batch_size``).
     """
+    from django.db import DEFAULT_DB_ALIAS
+
     from .models import Award
     from .compat import get_user_model
+
     User = get_user_model()
+    connection = connection if connection else DEFAULT_DB_ALIAS
+
     return [Award(user=user, badge=badge)
                    for ids in chunks(user_ids, batch_size)
-                   for user in User.objects.filter(id__in=ids)]
+                   for user in User.objects.using(connection).filter(id__in=ids)]
 
 
-def chunk_user_queryset_for_ids(ids, batch_size=500):
+def chunk_user_queryset_for_ids(ids, connection=None, batch_size=500):
     """
     Returns a list of multiple User QuerySet chunked from ``ids`` (user IDs)
     and ``batch_size`` (how many ids to give to ``SELECT IN``).
     """
+    from django.db import DEFAULT_DB_ALIAS
     from .compat import get_user_model
+
     User = get_user_model()
-    return [User.objects.filter(id__in=ids) for chunked_ids in chunks(ids, batch_size)]
+    connection = connection if connection else DEFAULT_DB_ALIAS
+
+    return [User.objects.using(connection).filter(id__in=ids)
+            for chunked_ids in chunks(ids, batch_size)]

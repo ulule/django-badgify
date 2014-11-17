@@ -28,7 +28,10 @@ class Command(BaseCommand):
             type='int'),
         make_option('--badges',
             action='store',
-            dest='badges'))
+            dest='badges'),
+        make_option('--connection',
+            action='store',
+            dest='connection'))
 
     def handle(self, *args, **options):
         if not len(args):
