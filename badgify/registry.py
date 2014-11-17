@@ -84,9 +84,13 @@ class BadgifyRegistry(RegistryDatabaseOpsMixin):
                 A list containing invalid badge slugs (badges do not exist).
 
         """
+        from .exceptions import BadgeNotFound
+
         valid, invalid = [], []
+
         if not isinstance(badges, collections.Iterable):
             badges = [badges]
+
         for badge in badges:
             try:
                 recipe = self.get_recipe_instance(badge)
@@ -94,6 +98,7 @@ class BadgifyRegistry(RegistryDatabaseOpsMixin):
             except BadgeNotFound:
                 logger.error('✘ Badge "%s" has not been registered', badge)
                 invalid.append(badge)
+
         return (valid, invalid)
 
     def get_recipe_instance_from_class(self, klass):

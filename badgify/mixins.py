@@ -32,7 +32,9 @@ class RegistryDatabaseOpsMixin(object):
                         description=instance.description,
                         image=instance.image)
                     created.append(badge)
-                    logger.debug('✓ Badge %s: created', badge.slug)
+                    logger.debug('✓ Badge %s: created (connection=%s)',
+                        badge.slug,
+                        badge._state.db)
                 except IntegrityError:
                     failed.append(instance.slug)
 
@@ -55,7 +57,9 @@ class RegistryDatabaseOpsMixin(object):
             if not badge:
                 continue
 
-            logger.debug('→ Badge %s: syncing counts...', badge.slug)
+            logger.debug('→ Badge %s: syncing counts... (connection=%s)',
+                badge.slug,
+                badge._state.db)
 
             old_value, new_value = badge.users_count, badge.users.count()
             if old_value != new_value:
@@ -63,11 +67,15 @@ class RegistryDatabaseOpsMixin(object):
                 badge.save()
                 updated.append(badge)
                 logger.debug('✓ Badge %s: updated users count (from %d to %d)',
-                    badge.slug, old_value, new_value)
+                    badge.slug,
+                    old_value,
+                    new_value)
                 continue
 
             unchanged.append(badge)
-            logger.debug('✓ Badge %s: users count up-to-date (%d)', badge.slug, new_value)
+            logger.debug('✓ Badge %s: users count up-to-date (%d)',
+                badge.slug,
+                new_value)
 
         return (updated, unchanged)
 
@@ -108,7 +116,10 @@ class RegistryDatabaseOpsMixin(object):
 
             try:
                 Award.objects.bulk_create(objects, batch_size=batch_size)
-                logger.debug('✓ Badge %s: created %d awards', badge.slug, user_ids_count)
+                logger.debug('✓ Badge %s: created %d awards (connection=%s)',
+                    badge.slug,
+                    user_ids_count,
+                    Award.objects._db)
                 for obj in objects:
                     signals.post_save.send(
                         sender=obj.__class__,
@@ -116,4 +127,6 @@ class RegistryDatabaseOpsMixin(object):
                         created=True,
                         raw=True)
             except IntegrityError:
-                logger.error('✘ Badge %s: IntegrityError for %d awards', badge.slug, user_ids_count)
+                logger.error('✘ Badge %s: IntegrityError for %d awards',
+                    badge.slug,
+                    user_ids_count)

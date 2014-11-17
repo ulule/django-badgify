@@ -139,9 +139,10 @@ def get_user_ids_for_badge(badge, user_querysets, connection=None):
     existing_ids = badge.users.values_list('id', flat=True)
 
     ids = []
-    logger.debug('→ Badge %s: retrieving user ids from %d queryset(s)...',
+    logger.debug('→ Badge %s: retrieving user ids (querysets=%d, connection=%s)',
         badge.slug,
-        len(user_querysets))
+        len(user_querysets),
+        connection)
 
     for qs in user_querysets:
         if isinstance(qs, EmptyQuerySet):
@@ -168,6 +169,12 @@ def get_award_objects_for_badge(badge, user_ids, connection=None, batch_size=500
     User = get_user_model()
     connection = connection if connection else DEFAULT_DB_ALIAS
 
+    logger.debug("→ Badge %s: building award objects (user_ids=%d, batch_size=%d, connection=%s)",
+        badge.slug,
+        len(user_ids),
+        batch_size,
+        connection)
+
     return [Award(user=user, badge=badge)
                    for ids in chunks(user_ids, batch_size)
                    for user in User.objects.using(connection).filter(id__in=ids)]
@@ -183,6 +190,11 @@ def chunk_user_queryset_for_ids(ids, connection=None, batch_size=500):
 
     User = get_user_model()
     connection = connection if connection else DEFAULT_DB_ALIAS
+
+    logger.debug("→ Splitting user querysets (user_ids=%d, batch_size=%d, connection=%s)",
+        len(ids),
+        batch_size,
+        connection)
 
     return [User.objects.using(connection).filter(id__in=ids)
             for chunked_ids in chunks(ids, batch_size)]
