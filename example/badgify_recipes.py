@@ -20,8 +20,8 @@ class PythonLoverRecipe(BaseRecipe):
         return staticfiles_storage.open('python-lover.png')
 
     @property
-    def user_queryset(self):
-        return User.objects.filter(love_python=True)
+    def user_ids(self):
+        return User.objects.filter(love_python=True).values_list('id', flat=True)
 
 
 class JSLoverRecipe(BaseRecipe):
@@ -37,8 +37,8 @@ class JSLoverRecipe(BaseRecipe):
         return staticfiles_storage.open('js-lover.png')
 
     @property
-    def user_queryset(self):
-        return User.objects.filter(love_js=True)
+    def user_ids(self):
+        return User.objects.filter(love_js=True).values_list('id', flat=True)
 
 
 badgify.register(PythonLoverRecipe)
