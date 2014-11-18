@@ -59,3 +59,8 @@ ENABLE_BADGE_USERS_COUNT_SIGNAL = getattr(
     settings,
     '%s_ENABLE_BADGE_USERS_COUNT_SIGNAL' % APP_NAMESPACE,
     False)
+
+USER_IDS_LIMIT = getattr(
+    settings,
+    '%s_USER_IDS_LIMIT' % APP_NAMESPACE,
+    500)
