@@ -14,7 +14,7 @@ pep8:
 
 test:
 	@coverage run --branch --source=badgify manage.py test badgify
-	@coverage report --omit=badgify/test*
+	@coverage report --omit=*migrations*,*tests*,*management*
 
 release:
 	python setup.py sdist register upload -s
