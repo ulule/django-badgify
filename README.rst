@@ -72,7 +72,7 @@ A recipe class must implement:
 * ``slug`` class attribute: the badge slug
 * ``description`` class attribute: the badge description
 * ``image`` property: the badge image (must be a ``File``)
-* ``user_queryset`` property: a ``AUTH_USER_MODEL`` QuerySet for the badge
+* ``user_ids`` property: QuerySet or list of User IDs that fullfill the badge success
 
 Example:
 
@@ -99,8 +99,9 @@ Example:
             return staticfiles_storage.open('python-lover.png')
 
         @property
-        def user_queryset(self):
-            return MyCustomUser.objects.filter(love_python=True)
+        def user_ids(self):
+            return (MyCustomUser.objects.filter(love_python=True)
+                                        .values_list('id', flat=True))
 
 
     class JSLoverRecipe(BaseRecipe):
@@ -116,8 +117,10 @@ Example:
             return staticfiles_storage.open('js-lover.png')
 
         @property
-        def user_queryset(self):
-            return MyCustomUser.objects.filter(love_js=True)
+        def user_ids(self):
+            return (MyCustomUser.objects.filter(love_js=True)
+                                        .values_list('id', flat=True))
+
 
     class JavaLoverRecipe(BaseRecipe):
         """
@@ -130,10 +133,6 @@ Example:
         @property
         def image(self):
             return staticfiles_storage.open('js-lover.png')
-
-        @property
-        def user_queryset(self):
-            return MyCustomUser.objects.none()
 
 
     badgify.register([
@@ -286,6 +285,10 @@ module. All application settings are prefixed with ``BADGIFY_``.
 
 ``BADGIFY_AWARD_BULK_CREATE_BATCH_SIZE``
     How many ``Award`` objects to create in a single query.
+
+``BADGIFY_USER_IDS_LIMIT``
+    Maximum of User IDs to retrieve per SELECT IN query.
+    Defaults to ``500``.
 
 ``BADGIFY_ENABLE_BADGE_USERS_COUNT_SIGNAL``
     Auto-increment ``badge.users_count`` field when a new award is created.
