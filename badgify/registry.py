@@ -116,30 +116,14 @@ class BadgifyRegistry(object):
         Iterates over registered recipes and denormalizes ``Badge.users.count()``
         into ``Badge.users_count`` field.
         """
-        updated, unchanged = [], []
-
+        updated_badges, unchanged_badges = [], []
         for instance in self.get_recipe_instances():
-            badge = instance.badge
-            if not badge:
-                logger.debug('→ Badge %s: skipped — does not exist (run badgify_sync badges)',
-                    instance.slug)
-                continue
-            logger.debug('→ Badge %s: syncing users count...', badge.slug)
-            old_value, new_value = badge.users_count, badge.users.count()
-            if old_value != new_value:
-                badge.users_count = new_value
-                badge.save()
-                updated.append(badge)
-                logger.debug('✓ Badge %s: updated users count (from %d to %d)',
-                    badge.slug,
-                    old_value,
-                    new_value)
+            badge, updated = instance.update_badge_users_count()
+            if updated:
+                updated_badges.append(badge)
             else:
-                unchanged.append(badge)
-                logger.debug('✓ Badge %s: users count up-to-date (%d)',
-                    badge.slug,
-                    new_value)
-        return (updated, unchanged)
+                unchanged_badges.append(badge)
+        return (updated_badges, unchanged_badges)
 
     def sync_awards(self, **kwargs):
         """
