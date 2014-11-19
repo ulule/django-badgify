@@ -58,78 +58,113 @@ class BaseRecipe(object):
             pass
         return obj
 
-    def get_missing_user_ids(self):
+    def can_perform_awarding(self):
         """
-        Returns a tuple of missing unique user IDs and number of IDS for the given
-        QuerySet list and badge.
+        Checks if we can perform awarding process (is ``user_ids`` property
+        defined? Does Badge object exists? and so on). If we can perform db
+        operations safely, returns ``True``. Otherwise, ``False``.
         """
-        from django.db import connections
-        existing_ids = self.badge.users.using(self.db_read).values_list('id', flat=True)
+        if not self.user_ids:
+            logger.debug(
+                '✘ Badge %s: no users to check (empty user_ids property)',
+                self.slug)
+            return False
+
+        if not self.badge:
+            logger.debug(
+                '✘ Badge %s: does not exist in the database (run badgify_sync badges)',
+                self.slug)
+            return False
+
+        return True
+
+    def get_already_awarded_user_ids(self):
+        """
+        Returns already awarded user ids and the count.
+        """
+        already_awarded_ids = self.badge.users.values_list('id', flat=True)
+        already_awarded_ids_count = len(already_awarded_ids)
+
         logger.debug(
             "→ Badge %s: %d users already awarded (fetched from db '%s')",
             self.slug,
-            len(existing_ids),
+            already_awarded_ids_count,
             self.db_read)
 
+        return already_awarded_ids
+
+    def get_current_user_ids(self):
+        """
+        Returns current user ids and the count.
+        """
         current_ids = self.user_ids.using(self.db_read)
+        current_ids_count = len(current_ids)
+
         logger.debug(
             "→ Badge %s: %d users to check (fetched from db '%s')",
             self.slug,
-            len(current_ids),
+            current_ids_count,
             self.db_read)
 
-        missing_ids = list(set(current_ids) - set(existing_ids))
+        return current_ids
+
+    def get_unawarded_user_ids(self):
+        """
+        Returns unawarded user ids (need to be saved) and the count.
+        """
+        already_awarded_ids = self.get_already_awarded_user_ids()
+        current_ids = self.get_current_user_ids()
+        unawarded_ids = list(set(current_ids) - set(already_awarded_ids))
+        unawarded_ids_count = len(unawarded_ids)
+
         logger.debug(
             '→ Badge %s: %d users need to be awarded',
-            self.slug, len(missing_ids))
+            self.slug,
+            unawarded_ids_count)
 
-        return list(set(current_ids) - set(existing_ids))
+        return (unawarded_ids, unawarded_ids_count)
 
     def get_award_objects(self):
         """
         Returns a list of ``Award`` objects ready to be saved.
         """
         User = get_user_model()
-        ids = self.get_missing_user_ids()
-        ids_limit = self.user_ids_limit
-        ids_count = len(ids)
-        if not ids:
+        unawarded_ids, unawarded_ids_count = self.get_unawarded_user_ids()
+
+        if not unawarded_ids:
             return
+
         awards = []
         done_ids = 0
-        for user_ids in chunks(ids, ids_limit):
-            done_ids += ids_limit
+
+        for user_ids in chunks(unawarded_ids, self.user_ids_limit):
+            done_ids += self.user_ids_limit
+            actual_count = done_ids if done_ids <= unawarded_ids_count else unawarded_ids_count
             logger.debug(
-                "→ Badge %s: building award objects -- fetching %d of %d users "
+                "→ Badge %s: building award objects -- %d on %d users "
                 "(db '%s')",
                 self.slug,
-                done_ids,
-                ids_count,
+                actual_count,
+                unawarded_ids_count,
                 self.db_read)
             for user in User.objects.using(self.db_read).filter(id__in=user_ids):
                 awards.append(Award(user=user, badge=self.badge))
+
         return awards
 
-    def create_awards(self):
+    def save_award_objects(self):
         """
-        Create awards.
+        Saves award objects.
         """
-        logger.debug('✓ Badge %s: finding awards...', self.badge.slug)
-
-        awards = self.get_award_objects() or []
-
+        awards = self.get_award_objects()
         if not awards:
             return
-
-        count = len(awards)
-        batch_size = self.award_batch_size
-
         try:
-            Award.objects.bulk_create(awards, batch_size=batch_size)
+            Award.objects.bulk_create(awards, batch_size=self.award_batch_size)
             logger.debug('✓ Badge %s: created %d awards (%d items by insert)',
                 self.slug,
-                count,
-                batch_size)
+                len(awards),
+                self.award_batch_size)
             for obj in awards:
                 signals.post_save.send(
                     sender=obj.__class__,
@@ -138,3 +173,10 @@ class BaseRecipe(object):
                     raw=True)
         except IntegrityError:
             logger.error('✘ Badge %s: IntegrityError for %d awards', self.slug, count)
+
+    def create_awards(self):
+        """
+        Create awards.
+        """
+        if self.can_perform_awarding():
+            return self.save_award_objects()
