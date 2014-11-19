@@ -148,11 +148,6 @@ class BadgifyRegistry(object):
         from django.db import connection
         badges = kwargs.get('badges')
         for instance in self.get_recipe_instances(badges=badges):
-            if not instance.badge:
-                logger.debug(
-                    '→ Badge %s: skipped — does not exist (run badgify_sync badges)',
-                    instance.slug)
-                continue
             instance.create_awards()
             logger.debug(
                 '→ Badge %s: SQL queries time %.2f second(s)',
