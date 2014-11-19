@@ -116,13 +116,19 @@ class BadgifyRegistry(object):
         Iterates over registered recipes and denormalizes ``Badge.users.count()``
         into ``Badge.users_count`` field.
         """
+        from django.db import connection
+        badges = kwargs.get('badges')
         updated_badges, unchanged_badges = [], []
-        for instance in self.get_recipe_instances():
+        for instance in self.get_recipe_instances(badges=badges):
             badge, updated = instance.update_badge_users_count()
             if updated:
                 updated_badges.append(badge)
             else:
                 unchanged_badges.append(badge)
+            logger.debug(
+                '→ Badge %s: SQL queries time %.2f second(s)',
+                instance.slug,
+                sum([float(q['time']) for q in connection.queries]))
         return (updated_badges, unchanged_badges)
 
     def sync_awards(self, **kwargs):
