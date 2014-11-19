@@ -96,31 +96,20 @@ class BadgifyRegistry(object):
         assert issubclass(klass, BaseRecipe)
         return klass()
 
-    def syncdb(self, **kwargs):
+    def sync_badges(self, **kwargs):
         """
         Iterates over registered recipes and creates missing badges.
         """
         from django.db import IntegrityError
         from .models import Badge
-        created, failed = [], []
+        created_badges, failed_badges = [], []
         for instance in self.get_recipe_instances():
-            try:
-                Badge.objects.get(slug=instance.slug)
-            except Badge.DoesNotExist:
-                try:
-                    badge = Badge.objects.create(
-                        name=instance.name,
-                        slug=instance.slug,
-                        description=instance.description,
-                        image=instance.image)
-                    created.append(badge)
-                    logger.debug('✓ Badge %s: created', badge.slug)
-                except IntegrityError:
-                    failed.append(instance.slug)
-        if failed:
-            for badge in failed:
-                logger.error('✘ Badge %s: IntegrityError', badge)
-        return (created, failed)
+            badge, created, failed = instance.create_badge()
+            if created:
+                created_badges.append(badge)
+            if failed:
+                failed_badges.append(instance.slug)
+        return (created_badges, failed_badges)
 
     def sync_users_count(self, **kwargs):
         """

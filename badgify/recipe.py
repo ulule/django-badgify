@@ -58,6 +58,33 @@ class BaseRecipe(object):
             pass
         return obj
 
+    def create_badge(self):
+        """
+        Saves the badge in the database.
+        Returns a tuple: ``badge`` (the badge object), ``created`` (``True``, if
+        badge has been created) and ``failed`` (``True`` if an ``IntegrityError``
+        occured).
+        """
+        badge = None
+        created, failed = False, False
+        try:
+            badge = Badge.objects.get(slug=self.slug)
+        except Badge.DoesNotExist:
+            try:
+                kwargs = {'name': self.name, 'image': self.image}
+                optional_fields = ['slug', 'description']
+                for field in optional_fields:
+                    value = getattr(self, field)
+                    if value is not None:
+                        kwargs[field] = value
+                badge = Badge.objects.create(**kwargs)
+                created = True
+                logger.debug('✓ Badge %s: created', badge.slug)
+            except IntegrityError:
+                failed = True
+                logger.debug('✘ Badge %s: IntegrityError', self.slug)
+        return (badge, created, failed)
+
     def can_perform_awarding(self):
         """
         Checks if we can perform awarding process (is ``user_ids`` property

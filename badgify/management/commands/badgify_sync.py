@@ -45,7 +45,7 @@ class Command(BaseCommand):
         """
         Synchronizes badges.
         """
-        registry.syncdb(**options)
+        registry.sync_badges(**options)
 
     def sync_users_count(self, **options):
         """

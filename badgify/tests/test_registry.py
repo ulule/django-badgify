@@ -94,17 +94,17 @@ class RegistryTestCase(TestCase):
         self.assertTrue(isinstance(instance, Recipe1))
         self.assertRaises(AssertionError, registry.get_recipe_instance_from_class, BadRecipe)
 
-    def test_syncdb(self):
+    def test_sync_badges(self):
         registry = Registry()
         registry.register([Recipe1, Recipe2])
-        created, failed = registry.syncdb()
+        created, failed = registry.sync_badges()
         self.assertEqual(len(created), 2)
 
     def test_sync_users_count(self):
         user = get_user_model().objects.create_user('user', 'user@example.com', '$ecret')
         registry = Registry()
         registry.register([Recipe1, Recipe2])
-        registry.syncdb()
+        registry.sync_badges()
         updated, unchanged = registry.sync_users_count()
         self.assertEqual(len(updated), 0)
         self.assertEqual(len(unchanged), 2)
@@ -124,7 +124,7 @@ class RegistryTestCase(TestCase):
         registry = Registry()
         registry.register(Recipe1)
         recipe = registry.get_recipe_instance('recipe1')
-        created, failed = registry.syncdb()
+        created, failed = registry.sync_badges()
         self.assertEqual(len(created), 1)
         self.assertEqual(recipe.badge.users.count(), 0)
         user.love_python = True
