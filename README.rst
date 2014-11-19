@@ -68,11 +68,37 @@ Create and register your recipe classes:
 
 A recipe class must implement:
 
-* ``name`` class attribute: the badge name
-* ``slug`` class attribute: the badge slug
-* ``description`` class attribute: the badge description
-* ``image`` property: the badge image (must be a ``File``)
-* ``user_ids`` property: QuerySet or list of User IDs that fullfill the badge success
+    ``name`` class attribute
+        The badge name (humanized).
+
+    ``slug`` class attribute
+        The badge slug (used internally and in URLs).
+
+    ``description`` class attribute
+        The badge description (short).
+
+    ``image`` property
+        The badge image/logo as a file object.
+
+A recipe class may implement:
+
+    ``user_ids`` property
+        ``QuerySet`` returning User IDs likely to be awarded. You must return a
+        ``QuerySet`` and not just a Python list or tuple. You can use
+        ``values_list('id', flat=True)``.
+
+    ``db_read`` class attribute
+        The database alias on which to perform read queries.
+        Defaults to ``django.db.DEFAULT_DB_ALIAS``.
+
+    ``user_ids_limit`` class attribute
+        Maximum number of User IDs to retrieve per ``SELECT IN`` query when
+        preparing ``Award`` objects for bulk create.
+        Defaults to ``BADGIFY_USER_IDS_LIMIT`` (``500``).
+
+    ``award_batch_size`` class attribute
+        How many ``Award`` objects to create in a single query at bulk create.
+        Defaults to ``BADGIFY_AWARD_BULK_CREATE_BATCH_SIZE`` (``30000``).
 
 Example:
 
@@ -173,7 +199,7 @@ Takes three sub-commands:
 
 ``awards``
     Loads registered recipes and create awards for objects returned by recipe's
-    ``user_queryset`` property. For manual assignment, return ``User.objects.none()``.
+    ``user_ids`` property.
 
     **Options are:**
 
@@ -281,6 +307,7 @@ module. All application settings are prefixed with ``BADGIFY_``.
 
 ``BADGIFY_AWARD_BULK_CREATE_BATCH_SIZE``
     How many ``Award`` objects to create in a single query.
+    Defaults to ``30000``.
 
 ``BADGIFY_USER_IDS_LIMIT``
     Maximum of User IDs to retrieve per SELECT IN query.
