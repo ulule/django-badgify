@@ -4,15 +4,7 @@ from optparse import make_option
 
 from django.core.management.base import BaseCommand, CommandError
 
-from badgify.commands import sync_badges, sync_awards, sync_counts
-from badgify import settings
-
-
-COMMANDS = collections.OrderedDict([
-    ('badges', sync_badges),
-    ('awards', sync_awards),
-    ('counts', sync_counts),
-])
+from badgify import settings, registry
 
 
 class Command(BaseCommand):
@@ -22,30 +14,57 @@ class Command(BaseCommand):
     help = u'Synchronizes badges, awards and counts.'
 
     option_list = BaseCommand.option_list + (
-        make_option('--batch-size',
-            action='store',
-            dest='batch_size',
-            type='int'),
         make_option('--badges',
             action='store',
-            dest='badges'),
-        make_option('--connection',
-            action='store',
-            dest='connection'))
+            dest='badges',
+            type='string'),)
 
     def handle(self, *args, **options):
+        commands = collections.OrderedDict([
+            ('badges', self.sync_badges),
+            ('awards', self.sync_awards),
+            ('users_count', self.sync_users_count),
+        ])
         if not len(args):
             if settings.ENABLE_BADGE_USERS_COUNT_SIGNAL:
-                del COMMANDS['counts']
-            for cmd in COMMANDS.itervalues():
+                del commands['users_count']
+            for cmd in commands.itervalues():
                 cmd(**options)
             return
         if len(args) > 1:
-            raise CommandError('This command only accepts: %s' % ', '.join(COMMANDS))
+            raise CommandError('This command only accepts: %s' % ', '.join(commands))
         if len(args) == 1:
             arg = args[0]
-            if arg not in COMMANDS.keys():
+            if arg not in commands.keys():
                 raise CommandError('"%s" is not a valid command. Use: %s' % (
                     arg,
-                    ', '.join(COMMANDS)))
-            COMMANDS[arg](**options)
+                    ', '.join(commands)))
+            commands[arg](**options)
+
+    def sync_badges(self, **options):
+        """
+        Synchronizes badges.
+        """
+        registry.syncdb(**options)
+
+    def sync_users_count(self, **options):
+        """
+        Denormalizes ``Badge.users.count()`` into ``badge.users_count`` field.
+        """
+        registry.sync_users_count(**options)
+
+    def sync_awards(self, **options):
+        """
+        Synchronizes awards.
+        """
+        registry.sync_awards(**options)
+
+    def _get_option_badges(kwargs):
+        """
+        Takes a kwargs dictionary, looks for ``badges`` key and returns
+        either the normalized slugs from ``badges`` key value if defined or ``None``.
+        """
+        badges = kwargs.get('badges', None)
+        if badges:
+            badges = [b for b in badges.split(' ') if b]
+        return badges
