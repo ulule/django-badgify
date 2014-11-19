@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 import logging
 
-from django.db import DEFAULT_DB_ALIAS, IntegrityError
+from django.db import connection, connections, DEFAULT_DB_ALIAS, IntegrityError
 from django.db.models import signals
 from django.db.models.query import QuerySet
 from django.utils.functional import cached_property
@@ -30,25 +30,13 @@ class BaseRecipe(object):
     # Badge.description
     description = None
 
-    # The default Badge QuerySet used to retrieve the related badge
-    badge_queryset = Badge.objects.all()
-
-    # The database on which to perform read-only queries for Badge model
-    badge_db_read = DEFAULT_DB_ALIAS
-
-    # The database on which to perform write queries for Badge model
-    badge_db_write = DEFAULT_DB_ALIAS
+    # The database on which to perform read queries
+    db_read = DEFAULT_DB_ALIAS
 
     # Maximum number of User IDs to retrieve by query (for SELECT IN)
     # Example: User.objects.filter(id__in=MAX_NUMBER)
     # The queryset will be chunked into multiple querysets of n max IDs.
     user_ids_limit = settings.USER_IDS_LIMIT
-
-    # The database on which to perform user read-only queries
-    user_db_read = DEFAULT_DB_ALIAS
-
-    # The database on which to perform Award write queries
-    award_db_write = DEFAULT_DB_ALIAS
 
     # How many awards to create in a single query
     award_batch_size = settings.AWARD_BULK_CREATE_BATCH_SIZE
@@ -61,89 +49,87 @@ class BaseRecipe(object):
     def user_ids(self):
         pass
 
-    @cached_property
+    @property
     def badge(self):
         obj = None
         try:
-            obj = self.badge_queryset.using(self.badge_db_read).get(slug=self.slug)
+            obj = Badge.objects.get(slug=self.slug)
         except Badge.DoesNotExist:
             pass
         return obj
-
-    @classmethod
-    def chunk_user_queryset(cls, ids):
-        """
-        Returns a list of multiple User QuerySet.
-        """
-        User = get_user_model()
-        return [User.objects.using(cls.user_db_read).filter(id__in=ids)
-                for chunked_ids in chunks(ids, cls.user_ids_limit)]
-
-    def get_user_querysets(self):
-        ids = self.user_ids
-        if isinstance(self.user_ids, QuerySet):
-            ids = list(ids)
-        if ids:
-            return self.chunk_user_queryset(ids=ids)
 
     def get_missing_user_ids(self):
         """
         Returns a tuple of missing unique user IDs and number of IDS for the given
         QuerySet list and badge.
         """
-        querysets = self.get_user_querysets() or []
-        querysets_count = len(querysets)
-        user_db = self.user_db_read
-        existing_ids = self.badge.users.values_list('id', flat=True)
-        ids = []
-        if querysets:
-            logger.debug('→ Badge %s: retrieving user ids (user querysets count:%d, user db: %s)',
-                self.slug,
-                querysets_count,
-                user_db)
-        for qs in querysets:
-            qs_ids = qs.using(user_db).values_list('id', flat=True)
-            missing_ids = list(set(qs_ids) - set(existing_ids))
-            ids = ids + missing_ids
-        return list(set(ids))
+        from django.db import connections
+        existing_ids = self.badge.users.using(self.db_read).values_list('id', flat=True)
+        logger.debug(
+            "→ Badge %s: %d users already awarded (fetched from db '%s')",
+            self.slug,
+            len(existing_ids),
+            self.db_read)
+
+        current_ids = self.user_ids.using(self.db_read)
+        logger.debug(
+            "→ Badge %s: %d users to check (fetched from db '%s')",
+            self.slug,
+            len(current_ids),
+            self.db_read)
+
+        missing_ids = list(set(current_ids) - set(existing_ids))
+        logger.debug(
+            '→ Badge %s: %d users need to be awarded',
+            self.slug, len(missing_ids))
+
+        return list(set(current_ids) - set(existing_ids))
 
     def get_award_objects(self):
         """
         Returns a list of ``Award`` objects ready to be saved.
         """
         User = get_user_model()
-        user_ids = self.get_missing_user_ids()
-        user_ids_limit = self.user_ids_limit
-        user_ids_count = len(user_ids)
-        user_db = self.user_db_read
-        if not user_ids:
-            logger.debug('→ Badge %s: no awards', self.slug)
+        ids = self.get_missing_user_ids()
+        ids_limit = self.user_ids_limit
+        ids_count = len(ids)
+        if not ids:
             return
-        logger.debug("→ Badge %s: building award objects (user ids count: %d, user ids limit: %d, user db:%s)",
-            self.slug,
-            user_ids_count,
-            user_ids_limit,
-            user_db)
-        return [Award(user=user, badge=self.badge)
-                       for ids in chunks(user_ids, user_ids_limit)
-                       for user in User.objects.using(user_db).filter(id__in=user_ids)]
+        awards = []
+        done_ids = 0
+        for user_ids in chunks(ids, ids_limit):
+            done_ids += ids_limit
+            logger.debug(
+                "→ Badge %s: building award objects -- fetching %d of %d users "
+                "(db '%s')",
+                self.slug,
+                done_ids,
+                ids_count,
+                self.db_read)
+            for user in User.objects.using(self.db_read).filter(id__in=user_ids):
+                awards.append(Award(user=user, badge=self.badge))
+        return awards
 
     def create_awards(self):
         """
         Create awards.
         """
+        logger.debug('✓ Badge %s: finding awards...', self.badge.slug)
+
         awards = self.get_award_objects() or []
-        count = len(awards)
-        db = self.award_db_write
-        batch_size = self.award_batch_size
+
         if not awards:
             return
+
+        count = len(awards)
+        batch_size = self.award_batch_size
+
         try:
-            Award.objects.using(db).bulk_create(awards, batch_size=batch_size)
-            logger.debug('✓ Badge %s: created %d awards (batch size: %d, award db: %s)',
+            Award.objects.bulk_create(awards, batch_size=batch_size)
+            logger.debug('✓ Badge %s: created %d awards (%d items by insert)',
                 self.slug,
                 count,
-                db)
+                batch_size)
             for obj in awards:
                 signals.post_save.send(
                     sender=obj.__class__,
@@ -151,6 +137,4 @@ class BaseRecipe(object):
                     created=True,
                     raw=True)
         except IntegrityError:
-            logger.error('✘ Badge %s: IntegrityError for %d awards',
-                self.slug,
-                count)
+            logger.error('✘ Badge %s: IntegrityError for %d awards', self.slug, count)

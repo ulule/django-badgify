@@ -73,13 +73,6 @@ class BadgifyRegistry(object):
     def get_recipe_instances_for_badges(self, badges):
         """
         Takes a list of badge slugs and returns a tuple: ``(valid, invalid)``.
-
-            ``valid``
-                A list containing valid recipe instances (badges exist).
-
-            ``invalid``
-                A list containing invalid badge slugs (badges do not exist).
-
         """
         from .exceptions import BadgeNotFound
         valid, invalid = [], []
@@ -103,7 +96,7 @@ class BadgifyRegistry(object):
         assert issubclass(klass, BaseRecipe)
         return klass()
 
-    def syncdb(self):
+    def syncdb(self, **kwargs):
         """
         Iterates over registered recipes and creates missing badges.
         """
@@ -121,9 +114,7 @@ class BadgifyRegistry(object):
                         description=instance.description,
                         image=instance.image)
                     created.append(badge)
-                    logger.debug('✓ Badge %s: created (connection=%s)',
-                        badge.slug,
-                        badge._state.db)
+                    logger.debug('✓ Badge %s: created', badge.slug)
                 except IntegrityError:
                     failed.append(instance.slug)
         if failed:
@@ -131,21 +122,20 @@ class BadgifyRegistry(object):
                 logger.error('✘ Badge %s: IntegrityError', badge)
         return (created, failed)
 
-    def sync_users_count(self, connection=None):
+    def sync_users_count(self, **kwargs):
         """
         Iterates over registered recipes and denormalizes ``Badge.users.count()``
         into ``Badge.users_count`` field.
         """
         updated, unchanged = [], []
+
         for instance in self.get_recipe_instances():
             badge = instance.badge
             if not badge:
                 logger.debug('→ Badge %s: skipped — does not exist (run badgify_sync badges)',
                     instance.slug)
                 continue
-            logger.debug('→ Badge %s: syncing counts... (connection=%s)',
-                badge.slug,
-                badge._state.db)
+            logger.debug('→ Badge %s: syncing users count...', badge.slug)
             old_value, new_value = badge.users_count, badge.users.count()
             if old_value != new_value:
                 badge.users_count = new_value
@@ -162,16 +152,23 @@ class BadgifyRegistry(object):
                     new_value)
         return (updated, unchanged)
 
-    def sync_awards(self, connection=None, batch_size=None, badges=None):
+    def sync_awards(self, **kwargs):
         """
         Iterates over registered recipes and possibly creates awards.
         """
+        from django.db import connection
+        badges = kwargs.get('badges')
         for instance in self.get_recipe_instances(badges=badges):
             if not instance.badge:
-                logger.debug('→ Badge %s: skipped — does not exist (run badgify_sync badges)',
+                logger.debug(
+                    '→ Badge %s: skipped — does not exist (run badgify_sync badges)',
                     instance.slug)
                 continue
             instance.create_awards()
+            logger.debug(
+                '→ Badge %s: SQL queries time %.2f second(s)',
+                instance.slug,
+                sum([float(q['time']) for q in connection.queries]))
 
 
 def _autodiscover(recipes):
