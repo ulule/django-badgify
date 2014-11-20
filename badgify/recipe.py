@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 import logging
 
-from django.db import connection, connections, DEFAULT_DB_ALIAS, IntegrityError
+from django.db import DEFAULT_DB_ALIAS, IntegrityError
 from django.db.models import signals
 from django.db.models.query import QuerySet
 from django.utils.functional import cached_property
@@ -69,6 +69,7 @@ class BaseRecipe(object):
         created, failed = False, False
         try:
             badge = Badge.objects.get(slug=self.slug)
+            logger.debug('✓ Badge %s: already created', badge.slug)
         except Badge.DoesNotExist:
             try:
                 kwargs = {'name': self.name, 'image': self.image}
