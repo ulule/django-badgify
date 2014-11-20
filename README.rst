@@ -71,16 +71,18 @@ A recipe class must implement:
     ``name`` class attribute
         The badge name (humanized).
 
-    ``slug`` class attribute
-        The badge slug (used internally and in URLs).
-
-    ``description`` class attribute
-        The badge description (short).
-
     ``image`` property
         The badge image/logo as a file object.
 
 A recipe class may implement:
+
+    ``slug`` class attribute
+        The badge slug (used internally and in URLs).
+        If not provided, it will be auto-generated based on the badge name.
+
+    ``description`` class attribute
+        The badge description (short).
+        It not provided, value will be blank.
 
     ``user_ids`` property
         ``QuerySet`` returning User IDs likely to be awarded. You must return a
