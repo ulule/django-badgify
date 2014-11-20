@@ -20,6 +20,8 @@ class Command(BaseCommand):
             type='string'),)
 
     def handle(self, *args, **options):
+        self.options = options
+        self._sanitize_options()
         commands = collections.OrderedDict([
             ('badges', self.sync_badges),
             ('awards', self.sync_awards),
@@ -29,7 +31,7 @@ class Command(BaseCommand):
             if settings.ENABLE_BADGE_USERS_COUNT_SIGNAL:
                 del commands['users_count']
             for cmd in commands.itervalues():
-                cmd(**options)
+                cmd()
             return
         if len(args) > 1:
             raise CommandError('This command only accepts: %s' % ', '.join(commands))
@@ -39,32 +41,21 @@ class Command(BaseCommand):
                 raise CommandError('"%s" is not a valid command. Use: %s' % (
                     arg,
                     ', '.join(commands)))
-            commands[arg](**options)
+            commands[arg]()
 
-    def sync_badges(self, **options):
-        """
-        Synchronizes badges.
-        """
-        registry.sync_badges(**options)
+    def sync_badges(self):
+        registry.sync_badges(**self.options)
 
-    def sync_users_count(self, **options):
-        """
-        Denormalizes ``Badge.users.count()`` into ``badge.users_count`` field.
-        """
-        registry.sync_users_count(**options)
+    def sync_users_count(self):
+        registry.sync_users_count(**self.options)
 
-    def sync_awards(self, **options):
-        """
-        Synchronizes awards.
-        """
-        registry.sync_awards(**options)
+    def sync_awards(self):
+        registry.sync_awards(**self.options)
 
-    def _get_option_badges(kwargs):
-        """
-        Takes a kwargs dictionary, looks for ``badges`` key and returns
-        either the normalized slugs from ``badges`` key value if defined or ``None``.
-        """
-        badges = kwargs.get('badges', None)
+    def _sanitize_options(self):
+        self._sanitize_badges()
+
+    def _sanitize_badges(self):
+        badges = self.options.get('badges')
         if badges:
-            badges = [b for b in badges.split(' ') if b]
-        return badges
+            self.options['badges'] = [b for b in badges.split(' ') if b]
