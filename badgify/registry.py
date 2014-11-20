@@ -100,15 +100,17 @@ class BadgifyRegistry(object):
         """
         Iterates over registered recipes and creates missing badges.
         """
-        from django.db import IntegrityError
-        from .models import Badge
         created_badges, failed_badges = [], []
-        for instance in self.get_recipe_instances():
+        instances = self.get_recipe_instances()
+
+        for instance in instances:
             badge, created, failed = instance.create_badge()
             if created:
                 created_badges.append(badge)
             if failed:
                 failed_badges.append(instance.slug)
+            self._log_queries(instance)
+
         return (created_badges, failed_badges)
 
     def sync_users_count(self, **kwargs):
@@ -116,33 +118,41 @@ class BadgifyRegistry(object):
         Iterates over registered recipes and denormalizes ``Badge.users.count()``
         into ``Badge.users_count`` field.
         """
-        from django.db import connection
         badges = kwargs.get('badges')
+        instances = self.get_recipe_instances(badges=badges)
         updated_badges, unchanged_badges = [], []
-        for instance in self.get_recipe_instances(badges=badges):
+
+        for instance in instances:
             badge, updated = instance.update_badge_users_count()
             if updated:
                 updated_badges.append(badge)
             else:
                 unchanged_badges.append(badge)
-            logger.debug(
-                '→ Badge %s: SQL queries time %.2f second(s)',
-                instance.slug,
-                sum([float(q['time']) for q in connection.queries]))
+            self._log_queries(instance)
+
         return (updated_badges, unchanged_badges)
 
     def sync_awards(self, **kwargs):
         """
         Iterates over registered recipes and possibly creates awards.
         """
-        from django.db import connection
         badges = kwargs.get('badges')
-        for instance in self.get_recipe_instances(badges=badges):
+        instances = self.get_recipe_instances(badges=badges)
+
+        for instance in instances:
             instance.create_awards()
-            logger.debug(
-                '→ Badge %s: SQL queries time %.2f second(s)',
-                instance.slug,
-                sum([float(q['time']) for q in connection.queries]))
+            self._log_queries(instance)
+
+    @staticmethod
+    def _log_queries(instance):
+        """
+        Logs recipe instance SQL queries (actually, only time).
+        """
+        from django.db import connection
+        logger.debug(
+            '⚐ Badge %s: SQL queries time %.2f second(s)',
+            instance.slug,
+            sum([float(q['time']) for q in connection.queries]))
 
 
 def _autodiscover(recipes):
