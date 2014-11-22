@@ -93,14 +93,9 @@ A recipe class may implement:
         The database alias on which to perform read queries.
         Defaults to ``django.db.DEFAULT_DB_ALIAS``.
 
-    ``user_ids_limit`` class attribute
-        Maximum number of User IDs to retrieve per ``SELECT IN`` query when
-        preparing ``Award`` objects for bulk create.
-        Defaults to ``BADGIFY_USER_IDS_LIMIT`` (``500``).
-
-    ``award_batch_size`` class attribute
-        How many ``Award`` objects to create in a single query at bulk create.
-        Defaults to ``BADGIFY_AWARD_BULK_CREATE_BATCH_SIZE`` (``30000``).
+    ``max_awards_per_create`` class attribute
+        How many ``Award`` objects to create at once.
+        Defaults to ``BADGIFY_MAX_AWARDS_PER_CREATE`` (``500``).
 
 Example:
 
@@ -315,13 +310,13 @@ module. All application settings are prefixed with ``BADGIFY_``.
     Your own concrete ``Award`` model class as module path.
     Example: ``yourapp.models.Award``.
 
-``BADGIFY_AWARD_BULK_CREATE_BATCH_SIZE``
-    How many ``Award`` objects to create in a single query.
-    Defaults to ``30000``.
-
-``BADGIFY_USER_IDS_LIMIT``
-    Maximum of User IDs to retrieve per SELECT IN query.
+``BADGIFY_MAX_AWARDS_PER_CREATE``
+    Maximum number of ``Award`` objects to create at once.
     Defaults to ``500``.
+
+``BADGIFY_SKIP_AWARD_POST_SAVE_SIGNAL``
+    Don't send ``post_save`` signal after ``Award`` bulk create.
+    Defaults to ``False``. (Useful for development only).
 
 ``BADGIFY_ENABLE_BADGE_USERS_COUNT_SIGNAL``
     Auto-increment ``badge.users_count`` field when a new award is created.

@@ -33,13 +33,8 @@ class BaseRecipe(object):
     # The database on which to perform read queries
     db_read = DEFAULT_DB_ALIAS
 
-    # Maximum number of User IDs to retrieve by query (for SELECT IN)
-    # Example: User.objects.filter(id__in=MAX_NUMBER)
-    # The queryset will be chunked into multiple querysets of n max IDs.
-    user_ids_limit = settings.USER_IDS_LIMIT
-
-    # How many awards to create in a single query
-    award_batch_size = settings.AWARD_BULK_CREATE_BATCH_SIZE
+    # How many awards to create at once
+    max_awards_per_create = settings.MAX_AWARDS_PER_CREATE
 
     @property
     def image(self):
@@ -174,7 +169,7 @@ class BaseRecipe(object):
 
         return (unawarded_ids, unawarded_ids_count)
 
-    def get_award_objects(self):
+    def save_award_objects(self):
         """
         Returns a list of ``Award`` objects ready to be saved.
         """
@@ -184,45 +179,34 @@ class BaseRecipe(object):
         if not unawarded_ids:
             return
 
-        awards = []
         done_ids = 0
 
-        for user_ids in chunks(unawarded_ids, self.user_ids_limit):
-            done_ids += self.user_ids_limit
+        for user_ids in chunks(unawarded_ids, self.max_awards_per_create):
+            done_ids += self.max_awards_per_create
             actual_count = done_ids if done_ids <= unawarded_ids_count else unawarded_ids_count
-            logger.debug(
-                "→ Badge %s: building award objects -- %d on %d users "
-                "(db '%s')",
+            logger.debug("→ Badge %s: creating awards (%d / %d users) -- (db read: %s)",
                 self.slug,
                 actual_count,
                 unawarded_ids_count,
                 self.db_read)
-            for user in User.objects.using(self.db_read).filter(id__in=user_ids):
-                awards.append(Award(user=user, badge=self.badge))
+            self._bulk_create_awards([
+                Award(user=user, badge=self.badge)
+                for user in (User.objects.using(self.db_read)
+                                         .filter(id__in=user_ids))])
 
-        return awards
-
-    def save_award_objects(self):
+    @classmethod
+    def _bulk_create_awards(cls, objects):
         """
         Saves award objects.
         """
-        awards = self.get_award_objects()
-        if not awards:
-            return
+        count = len(objects)
         try:
-            Award.objects.bulk_create(awards, batch_size=self.award_batch_size)
-            logger.debug('✓ Badge %s: created %d awards (%d items by insert)',
-                self.slug,
-                len(awards),
-                self.award_batch_size)
-            for obj in awards:
-                signals.post_save.send(
-                    sender=obj.__class__,
-                    instance=obj,
-                    created=True,
-                    raw=True)
+            Award.objects.bulk_create(objects, batch_size=cls.max_awards_per_create)
+            if not settings.SKIP_AWARD_POST_SAVE_SIGNAL:
+                for obj in objects:
+                    signals.post_save.send(sender=obj.__class__, instance=obj, created=True)
         except IntegrityError:
-            logger.error('✘ Badge %s: IntegrityError for %d awards', self.slug, count)
+            logger.error('✘ Badge %s: IntegrityError for %d awards', cls.slug, count)
 
     def create_awards(self):
         """

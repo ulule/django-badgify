@@ -50,17 +50,17 @@ AWARD_MODEL = getattr(
     '%s_AWARD_MODEL' % APP_NAMESPACE,
     'badgify.models.award.Award')
 
-AWARD_BULK_CREATE_BATCH_SIZE = getattr(
+MAX_AWARDS_PER_CREATE = getattr(
     settings,
-    '%s_AWARD_BULK_CREATE_BATCH_SIZE' % APP_NAMESPACE,
-    30000)
+    '%s_MAX_AWARDS_PER_CREATE' % APP_NAMESPACE,
+    500)
+
+SKIP_AWARD_POST_SAVE_SIGNAL = getattr(
+    settings,
+    '%s_SKIP_AWARD_POST_SAVE_SIGNAL' % APP_NAMESPACE,
+    False)
 
 ENABLE_BADGE_USERS_COUNT_SIGNAL = getattr(
     settings,
     '%s_ENABLE_BADGE_USERS_COUNT_SIGNAL' % APP_NAMESPACE,
     False)
-
-USER_IDS_LIMIT = getattr(
-    settings,
-    '%s_USER_IDS_LIMIT' % APP_NAMESPACE,
-    500)
