@@ -48,7 +48,7 @@ class BaseRecipe(object):
     def badge(self):
         obj = None
         try:
-            obj = Badge.objects.using(self.db_read).get(slug=self.slug)
+            obj = Badge.objects.get(slug=self.slug)
         except Badge.DoesNotExist:
             pass
         return obj
