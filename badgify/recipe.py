@@ -48,7 +48,7 @@ class BaseRecipe(object):
     def badge(self):
         obj = None
         try:
-            obj = Badge.objects.get(slug=self.slug)
+            obj = Badge.objects.using(self.db_read).get(slug=self.slug)
         except Badge.DoesNotExist:
             pass
         return obj
@@ -60,12 +60,10 @@ class BaseRecipe(object):
         badge has been created) and ``failed`` (``True`` if an ``IntegrityError``
         occured).
         """
-        badge = None
-        created, failed = False, False
-        try:
-            badge = Badge.objects.get(slug=self.slug)
+        badge, created, failed = self.badge, False, False
+        if badge:
             logger.debug('✓ Badge %s: already created', badge.slug)
-        except Badge.DoesNotExist:
+        else:
             try:
                 kwargs = {'name': self.name, 'image': self.image}
                 optional_fields = ['slug', 'description']
