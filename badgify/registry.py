@@ -100,10 +100,13 @@ class BadgifyRegistry(object):
         """
         Iterates over registered recipes and creates missing badges.
         """
+        from django.db import reset_queries
+
         created_badges, failed_badges = [], []
         instances = self.get_recipe_instances()
 
         for instance in instances:
+            reset_queries()
             badge, created, failed = instance.create_badge()
             if created:
                 created_badges.append(badge)
@@ -118,11 +121,14 @@ class BadgifyRegistry(object):
         Iterates over registered recipes and denormalizes ``Badge.users.count()``
         into ``Badge.users_count`` field.
         """
+        from django.db import reset_queries
+
         badges = kwargs.get('badges')
         instances = self.get_recipe_instances(badges=badges)
         updated_badges, unchanged_badges = [], []
 
         for instance in instances:
+            reset_queries()
             badge, updated = instance.update_badge_users_count()
             if updated:
                 updated_badges.append(badge)
@@ -136,10 +142,13 @@ class BadgifyRegistry(object):
         """
         Iterates over registered recipes and possibly creates awards.
         """
+        from django.db import reset_queries
+
         badges = kwargs.get('badges')
         instances = self.get_recipe_instances(badges=badges)
 
         for instance in instances:
+            reset_queries()
             instance.create_awards()
             self._log_queries(instance)
 
@@ -149,6 +158,7 @@ class BadgifyRegistry(object):
         Logs recipe instance SQL queries (actually, only time).
         """
         from django.db import connection
+
         logger.debug(
             '⚐ Badge %s: SQL queries time %.2f second(s)',
             instance.slug,
