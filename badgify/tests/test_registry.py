@@ -25,6 +25,14 @@ class RegistryTestCase(TestCase):
         self.assertTrue(isinstance(registry.recipes, dict))
         self.assertEqual(len(registry.recipes), 1)
 
+    def test_registered(self):
+        registry = Registry()
+        registry.register(Recipe1)
+        registry.register(Recipe2)
+        self.assertTrue(isinstance(registry.registered, list))
+        self.assertIn('recipe1', registry.registered)
+        self.assertIn('recipe2', registry.registered)
+
     def test_register(self):
         registry = Registry()
         # With a single class
@@ -73,6 +81,12 @@ class RegistryTestCase(TestCase):
         self.assertEqual(len(instances), 1)
         instances = registry.get_recipe_instances(badges=['recipe1', 'recipe2'])
         self.assertEqual(len(instances), 2)
+        # By passing excluded arg
+        registry = Registry()
+        registry.register([Recipe1, Recipe2])
+        instances = registry.get_recipe_instances(excluded=['recipe2'])
+        self.assertEqual(len(instances), 1)
+        self.assertTrue(isinstance(instances[0], Recipe1))
 
     def test_get_recipe_instances_for_badges(self):
         registry = Registry()

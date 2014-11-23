@@ -17,7 +17,11 @@ class Command(BaseCommand):
         make_option('--badges',
             action='store',
             dest='badges',
-            type='string'),)
+            type='string'),
+        make_option('--exclude-badges',
+            action='store',
+            dest='exclude_badges',
+            type='string'))
 
     def handle(self, *args, **options):
         self.options = options
@@ -56,6 +60,7 @@ class Command(BaseCommand):
         self._sanitize_badges()
 
     def _sanitize_badges(self):
-        badges = self.options.get('badges')
-        if badges:
-            self.options['badges'] = [b for b in badges.split(' ') if b]
+        for option in ('badges', 'exclude_badges'):
+            badges = self.options[option]
+            if badges:
+                self.options[option] = [b for b in badges.split(' ') if b]

@@ -79,28 +79,6 @@ class BaseRecipe(object):
                 logger.debug('✘ Badge %s: IntegrityError', self.slug)
         return (badge, created, failed)
 
-    def update_badge_users_count(self):
-        badge = self.badge
-        if not badge:
-            return
-        logger.debug('→ Badge %s: syncing users count...', self.slug)
-        updated = False
-        old_value, new_value = badge.users_count, badge.users.count()
-        if old_value != new_value:
-            badge.users_count = new_value
-            badge.save()
-            updated = True
-        if updated:
-            logger.debug('✓ Badge %s: updated users count (from %d to %d)',
-                self.slug,
-                old_value,
-                new_value)
-        else:
-            logger.debug('✓ Badge %s: users count up-to-date (%d)',
-                self.slug,
-                new_value)
-        return (badge, updated)
-
     def can_perform_awarding(self):
         """
         Checks if we can perform awarding process (is ``user_ids`` property
@@ -120,6 +98,39 @@ class BaseRecipe(object):
             return False
 
         return True
+
+    def update_badge_users_count(self):
+        """
+        Denormalizes ``Badge.users.count()`` into ``Bagdes.users_count`` field.
+        """
+        logger.debug('→ Badge %s: syncing users count...', self.slug)
+
+        updated = False
+
+        if not self.badge:
+            logger.debug(
+                '✘ Badge %s: does not exist in the database (run badgify_sync badges)',
+                self.slug)
+            return (self.slug, updated)
+
+        old_value, new_value = badge.users_count, badge.users.count()
+
+        if old_value != new_value:
+            badge.users_count = new_value
+            badge.save()
+            updated = True
+
+        if updated:
+            logger.debug('✓ Badge %s: updated users count (from %d to %d)',
+                self.slug,
+                old_value,
+                new_value)
+        else:
+            logger.debug('✓ Badge %s: users count up-to-date (%d)',
+                self.slug,
+                new_value)
+
+        return (badge, updated)
 
     def get_already_awarded_user_ids(self):
         """

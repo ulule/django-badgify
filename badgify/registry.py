@@ -25,6 +25,13 @@ class BadgifyRegistry(object):
         """
         return self._registry
 
+    @property
+    def registered(self):
+        """
+        Returns registered recipes list (badge slugs).
+        """
+        return self._registry.keys()
+
     def register(self, recipe):
         """
         Registers a new recipe class.
@@ -51,6 +58,7 @@ class BadgifyRegistry(object):
         """
         self._registry = {}
 
+
     def get_recipe_instance(self, badge):
         """
         Returns the recipe instance for the given badge slug.
@@ -61,13 +69,23 @@ class BadgifyRegistry(object):
             return self.recipes[badge]
         raise BadgeNotFound()
 
-    def get_recipe_instances(self, badges=None):
+    def get_recipe_instances(self, badges=None, excluded=None):
         """
         Returns all recipe instances or just those for the given badges.
         """
         if badges:
+            if not isinstance(badges, (list, tuple)):
+                badges = [badges]
+
+        if excluded:
+            if not isinstance(excluded, (list, tuple)):
+                excluded = [excluded]
+            badges = list(set(self.registered) - set(excluded))
+
+        if badges:
             valid, invalid = self.get_recipe_instances_for_badges(badges=badges)
             return valid
+
         return self.recipes.values()
 
     def get_recipe_instances_for_badges(self, badges):
@@ -75,9 +93,12 @@ class BadgifyRegistry(object):
         Takes a list of badge slugs and returns a tuple: ``(valid, invalid)``.
         """
         from .exceptions import BadgeNotFound
+
         valid, invalid = [], []
+
         if not isinstance(badges, (list, tuple)):
             badges = [badges]
+
         for badge in badges:
             try:
                 recipe = self.get_recipe_instance(badge)
@@ -85,6 +106,7 @@ class BadgifyRegistry(object):
             except BadgeNotFound:
                 logger.debug('✘ Badge "%s" has not been registered', badge)
                 invalid.append(badge)
+
         return (valid, invalid)
 
     @staticmethod
@@ -124,7 +146,10 @@ class BadgifyRegistry(object):
         from django.db import reset_queries
 
         badges = kwargs.get('badges')
-        instances = self.get_recipe_instances(badges=badges)
+        excluded = kwargs.get('exclude_badges')
+
+        instances = self.get_recipe_instances(badges=badges, excluded=excluded)
+
         updated_badges, unchanged_badges = [], []
 
         for instance in instances:
@@ -145,7 +170,9 @@ class BadgifyRegistry(object):
         from django.db import reset_queries
 
         badges = kwargs.get('badges')
-        instances = self.get_recipe_instances(badges=badges)
+        excluded = kwargs.get('exclude_badges')
+
+        instances = self.get_recipe_instances(badges=badges, excluded=excluded)
 
         for instance in instances:
             reset_queries()

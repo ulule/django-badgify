@@ -206,6 +206,9 @@ Takes three sub-commands:
         Example with one badge: ``badgify_sync awards --badges my-badge``
         Example with multiple badges: ``badgify_sync awards --badges "badge-one badge-two"``
 
+    ``exclude-badges``
+        Same as ``badges`` option. But excludes the given badges.
+
 ``users_counts``
     Loads registered recipes and denormalizes ``badge.users.count()`` into
     ``Badge.users_count`` field. This can be a huge performance-saver.
@@ -217,6 +220,9 @@ Takes three sub-commands:
         badge, use single or double quotes and separate them with a space.
         Example with one badge: ``badgify_sync users_count --badges my-badge``
         Example with multiple badges: ``badgify_sync users_count --badges "badge-one badge-two"``
+
+    ``exclude-badges``
+        Same as ``badges`` option. But excludes the given badges.
 
 Templatetags
 ------------
