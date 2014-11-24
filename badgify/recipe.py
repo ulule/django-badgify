@@ -194,22 +194,8 @@ class BaseRecipe(object):
                 actual_count,
                 unawarded_ids_count,
                 self.db_read)
-            self._bulk_create_awards([
-                Award(user_id=user_id, badge=self.badge)
-                for user_id in user_ids])
-
-    def _bulk_create_awards(self, objects):
-        """
-        Saves award objects.
-        """
-        count = len(objects)
-        try:
-            Award.objects.bulk_create(objects, batch_size=self.max_awards_per_create)
-            if not settings.SKIP_AWARD_POST_SAVE_SIGNAL:
-                for obj in objects:
-                    signals.post_save.send(sender=obj.__class__, instance=obj, created=True)
-        except IntegrityError:
-            logger.error('✘ Badge %s: IntegrityError for %d awards', self.slug, count)
+            objects = [Award(user_id=user_id, badge=self.badge) for user_id in user_ids]
+            bulk_create_awards(recipe=self, objects=objects, batch_size=self.max_awards_per_create)
 
     def create_awards(self):
         """
@@ -217,3 +203,17 @@ class BaseRecipe(object):
         """
         if self.can_perform_awarding():
             return self.save_award_objects()
+
+
+def bulk_create_awards(recipe, objects, batch_size):
+    """
+    Saves award objects.
+    """
+    count = len(objects)
+    try:
+        Award.objects.bulk_create(objects, batch_size=batch_size)
+        if not settings.SKIP_AWARD_POST_SAVE_SIGNAL:
+            for obj in objects:
+                signals.post_save.send(sender=obj.__class__, instance=obj, created=True)
+    except IntegrityError:
+        logger.error('✘ Badge %s: IntegrityError for %d awards', recipe.slug, count)
