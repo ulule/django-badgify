@@ -4,10 +4,10 @@ from __future__ import unicode_literals
 import logging
 
 from django.core import exceptions
+from django.db import connection
 from django.utils.importlib import import_module
 
 from . import settings
-
 
 logger = logging.getLogger(__name__)
 
@@ -106,3 +106,13 @@ def chunks(l, n):
     """
     for i in xrange(0, len(l), n):
         yield l[i:i + n]
+
+
+def log_queries(recipe):
+    """
+    Logs recipe instance SQL queries (actually, only time).
+    """
+    logger.debug(
+        '⚐ Badge %s: SQL queries time %.2f second(s)',
+        recipe.slug,
+        sum([float(q['time']) for q in connection.queries]))
