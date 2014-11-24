@@ -195,9 +195,8 @@ class BaseRecipe(object):
                 unawarded_ids_count,
                 self.db_read)
             self._bulk_create_awards([
-                Award(user=user, badge=self.badge)
-                for user in (User.objects.using(self.db_read)
-                                         .filter(id__in=user_ids))])
+                Award(user_id=user_id, badge=self.badge)
+                for user_id in user_ids])
 
     def _bulk_create_awards(self, objects):
         """
