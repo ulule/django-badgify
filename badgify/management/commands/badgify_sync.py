@@ -4,7 +4,7 @@ from optparse import make_option
 
 from django.core.management.base import BaseCommand, CommandError
 
-from badgify import settings, registry
+from badgify import settings, commands
 
 
 class Command(BaseCommand):
@@ -25,22 +25,22 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         options = self.sanitize_options(options)
-        commands = ('badges', 'awards', 'users_count')
+        cmds = ('badges', 'awards', 'users_count')
         if not len(args):
             if settings.ENABLE_BADGE_USERS_COUNT_SIGNAL:
-                del commands['users_count']
-            for cmd in commands:
-                getattr(registry, 'sync_%s' % cmd)(**options)
+                del cmds['users_count']
+            for cmd in cmds:
+                getattr(commands, 'sync_%s' % cmd)(**options)
             return
         if len(args) > 1:
-            raise CommandError('This command only accepts: %s' % ', '.join(commands))
+            raise CommandError('This command only accepts: %s' % ', '.join(cmds))
         if len(args) == 1:
             arg = args[0]
-            if arg not in commands:
+            if arg not in cmds:
                 raise CommandError('"%s" is not a valid command. Use: %s' % (
                     arg,
-                    ', '.join(commands)))
-            getattr(registry, 'sync_%s' % arg)(**options)
+                    ', '.join(cmds)))
+            getattr(commands, 'sync_%s' % arg)(**options)
 
     @staticmethod
     def sanitize_options(options):
