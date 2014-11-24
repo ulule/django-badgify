@@ -24,43 +24,28 @@ class Command(BaseCommand):
             type='string'))
 
     def handle(self, *args, **options):
-        self.options = options
-        self._sanitize_options()
-        commands = collections.OrderedDict([
-            ('badges', self.sync_badges),
-            ('awards', self.sync_awards),
-            ('users_count', self.sync_users_count),
-        ])
+        options = self.sanitize_options(options)
+        commands = ('badges', 'awards', 'users_count')
         if not len(args):
             if settings.ENABLE_BADGE_USERS_COUNT_SIGNAL:
                 del commands['users_count']
-            for cmd in commands.itervalues():
-                cmd()
+            for cmd in commands:
+                getattr(registry, 'sync_%s' % cmd)(**options)
             return
         if len(args) > 1:
             raise CommandError('This command only accepts: %s' % ', '.join(commands))
         if len(args) == 1:
             arg = args[0]
-            if arg not in commands.keys():
+            if arg not in commands:
                 raise CommandError('"%s" is not a valid command. Use: %s' % (
                     arg,
                     ', '.join(commands)))
-            commands[arg]()
+            getattr(registry, 'sync_%s' % arg)(**options)
 
-    def sync_badges(self):
-        registry.sync_badges(**self.options)
-
-    def sync_users_count(self):
-        registry.sync_users_count(**self.options)
-
-    def sync_awards(self):
-        registry.sync_awards(**self.options)
-
-    def _sanitize_options(self):
-        self._sanitize_badges()
-
-    def _sanitize_badges(self):
+    @staticmethod
+    def sanitize_options(options):
         for option in ('badges', 'exclude_badges'):
-            badges = self.options[option]
+            badges = options[option]
             if badges:
-                self.options[option] = [b for b in badges.split(' ') if b]
+                options[option] = [b for b in badges.split(' ') if b]
+        return options

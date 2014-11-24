@@ -105,9 +105,10 @@ class BaseRecipe(object):
         """
         logger.debug('→ Badge %s: syncing users count...', self.slug)
 
+        badge = self.badge
         updated = False
 
-        if not self.badge:
+        if not badge:
             logger.debug(
                 '✘ Badge %s: does not exist in the database (run badgify_sync badges)',
                 self.slug)
