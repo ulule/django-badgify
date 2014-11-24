@@ -204,19 +204,18 @@ class BaseRecipe(object):
                 for user in (User.objects.using(self.db_read)
                                          .filter(id__in=user_ids))])
 
-    @classmethod
-    def _bulk_create_awards(cls, objects):
+    def _bulk_create_awards(self):
         """
         Saves award objects.
         """
         count = len(objects)
         try:
-            Award.objects.bulk_create(objects, batch_size=cls.max_awards_per_create)
+            Award.objects.bulk_create(objects, batch_size=self.max_awards_per_create)
             if not settings.SKIP_AWARD_POST_SAVE_SIGNAL:
                 for obj in objects:
                     signals.post_save.send(sender=obj.__class__, instance=obj, created=True)
         except IntegrityError:
-            logger.error('✘ Badge %s: IntegrityError for %d awards', cls.slug, count)
+            logger.error('✘ Badge %s: IntegrityError for %d awards', self.slug, count)
 
     def create_awards(self):
         """
