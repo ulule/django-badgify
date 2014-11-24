@@ -56,28 +56,23 @@ class BaseRecipe(object):
     def create_badge(self):
         """
         Saves the badge in the database.
-        Returns a tuple: ``badge`` (the badge object), ``created`` (``True``, if
-        badge has been created) and ``failed`` (``True`` if an ``IntegrityError``
-        occured).
+        Returns a tuple: ``badge`` (the badge object) and ``created`` (``True``, if
+        badge has been created).
         """
-        badge, created, failed = self.badge, False, False
+        badge, created = self.badge, False
         if badge:
             logger.debug('✓ Badge %s: already created', badge.slug)
         else:
-            try:
-                kwargs = {'name': self.name, 'image': self.image}
-                optional_fields = ['slug', 'description']
-                for field in optional_fields:
-                    value = getattr(self, field)
-                    if value is not None:
-                        kwargs[field] = value
-                badge = Badge.objects.create(**kwargs)
-                created = True
-                logger.debug('✓ Badge %s: created', badge.slug)
-            except IntegrityError:
-                failed = True
-                logger.debug('✘ Badge %s: IntegrityError', self.slug)
-        return (badge, created, failed)
+            kwargs = {'name': self.name, 'image': self.image}
+            optional_fields = ['slug', 'description']
+            for field in optional_fields:
+                value = getattr(self, field)
+                if value is not None:
+                    kwargs[field] = value
+            badge = Badge.objects.create(**kwargs)
+            created = True
+            logger.debug('✓ Badge %s: created', badge.slug)
+        return (badge, created)
 
     def can_perform_awarding(self):
         """
@@ -204,7 +199,7 @@ class BaseRecipe(object):
                 for user in (User.objects.using(self.db_read)
                                          .filter(id__in=user_ids))])
 
-    def _bulk_create_awards(self):
+    def _bulk_create_awards(self, objects):
         """
         Saves award objects.
         """

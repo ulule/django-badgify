@@ -9,19 +9,17 @@ def sync_badges(**kwargs):
     """
     Iterates over registered recipes and creates missing badges.
     """
-    created_badges, failed_badges = [], []
+    created_badges = []
     instances = registry.get_recipe_instances()
 
     for instance in instances:
         reset_queries()
-        badge, created, failed = instance.create_badge()
+        badge, created = instance.create_badge()
         if created:
             created_badges.append(badge)
-        if failed:
-            failed_badges.append(instance.slug)
         log_queries(instance)
 
-    return (created_badges, failed_badges)
+    return created_badges
 
 
 def sync_users_count(**kwargs):
