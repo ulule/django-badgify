@@ -193,6 +193,12 @@ Takes three sub-commands:
     Loads registered recipes and create related badges from recipe's ``name``,
     ``slug``, ``description`` and ``image`` attributes/properties.
 
+    **Options are:**
+
+    ``--update``
+
+        Updates badges if values of recipe attributes have been modified.
+
 ``awards``
 
     Loads registered recipes and create awards for objects returned by recipe's
