@@ -24,6 +24,12 @@ class CommandsTestCase(TestCase):
         registry.register([Recipe1, Recipe2])
         created = commands.sync_badges()
         self.assertEqual(len(created), 2)
+        Recipe1.name = 'Howdy'
+        commands.sync_badges(update=False)
+        self.assertEqual(Badge.objects.get(slug='recipe1').name, 'Recipe 1')
+        commands.sync_badges(update=True)
+        self.assertEqual(Badge.objects.get(slug='recipe1').name, 'Howdy')
+        Recipe1.name = 'Recipe 1'
 
     def test_sync_users_count(self):
         user = get_user_model().objects.create_user('user', 'user@example.com', '$ecret')

@@ -67,15 +67,24 @@ class BaseRecipe(object):
             obj = None
         return obj
 
-    def create_badge(self):
+    def create_badge(self, update=False):
         """
-        Saves the badge in the database.
+        Saves the badge in the database (or updates it if ``update`` is ``True``).
         Returns a tuple: ``badge`` (the badge object) and ``created`` (``True``, if
         badge has been created).
         """
         badge, created = self.badge, False
         if badge:
             logger.debug('✓ Badge %s: already created', badge.slug)
+            if update:
+                to_update = {}
+                for field in ('name', 'slug', 'description', 'image'):
+                    attr = getattr(self, field)
+                    badge_attr = getattr(badge, field)
+                    if attr != badge_attr:
+                        to_update[field] = attr
+                        logger.debug('✓ Badge %s: updated "%s" field', self.slug, field)
+                Badge.objects.filter(id=badge.id).update(**to_update)
         else:
             kwargs = {'name': self.name, 'image': self.image}
             optional_fields = ['slug', 'description']
