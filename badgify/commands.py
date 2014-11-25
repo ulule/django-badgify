@@ -27,7 +27,7 @@ def sync_badges(**kwargs):
     return created_badges
 
 
-def sync_users_count(**kwargs):
+def sync_counts(**kwargs):
     """
     Iterates over registered recipes and denormalizes ``Badge.users.count()``
     into ``Badge.users_count`` field.

@@ -1,18 +1,18 @@
 # -*- coding: utf-8 -*-
 from optparse import make_option
 
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import LabelCommand, CommandError
 
 from badgify import commands
 
 
-class Command(BaseCommand):
+class Command(LabelCommand):
     """
     Command that synchronizes badges, awards and counts.
     """
     help = u'Synchronizes badges, awards and counts.'
 
-    option_list = BaseCommand.option_list + (
+    option_list = LabelCommand.option_list + (
 
         make_option('--badges',
             action='store',
@@ -39,45 +39,33 @@ class Command(BaseCommand):
             type='string'),
     )
 
-    def handle(self, *args, **options):
+    def handle_label(self, label, **options):
         options = self.sanitize_options(options)
-        cmds = ('badges', 'awards', 'users_count')
-        if not len(args):
-            for cmd in cmds:
-                getattr(commands, 'sync_%s' % cmd)(**options)
-            return
-        if len(args) > 1:
-            raise CommandError('This command only accepts: %s' % ', '.join(cmds))
-        if len(args) == 1:
-            arg = args[0]
-            if arg not in cmds:
-                raise CommandError('"%s" is not a valid command. Use: %s' % (
-                    arg,
-                    ', '.join(cmds)))
-            getattr(commands, 'sync_%s' % arg)(**options)
+        if not hasattr(commands, 'sync_%s' % label):
+            raise CommandError('"%s" is not a valid command.' % label)
+        getattr(commands, 'sync_%s' % label)(**options)
+
+    def sanitize_options(self, options):
+        options = self.sanitize_multiples(options)
+        options = self.sanitize_switchers(options)
+        return options
 
     @staticmethod
-    def sanitize_options(options):
-        switchers = [
-            'auto_denormalize',
-            'award_post_save',
-        ]
+    def sanitize_multiples(options):
+        multiples = ['badges', 'exclude_badges']
+        for option in multiples:
+            value = options[option]
+            if value:
+                options[option] = [v for v in value.split(' ') if v]
+        return options
 
-        multiple_options = [
-            'badges',
-            'exclude_badges',
-        ]
-
+    @staticmethod
+    def sanitize_switchers(options):
+        switchers = ['auto_denormalize', 'award_post_save']
         for option in switchers:
             value = options[option]
             if value:
                 if value not in ('on', 'off'):
                     raise CommandError('Option "%s" only takes "on" or "off"' % option)
                 options[option] = True if value == 'on' else False
-
-        for option in multiple_options:
-            value = options[option]
-            if value:
-                options[option] = [v for v in value.split(' ') if v]
-
         return options

@@ -35,18 +35,18 @@ class CommandsTestCase(TestCase):
         self.assertEqual(Badge.objects.get(slug='recipe1').name, 'Howdy')
         Recipe1.name = 'Recipe 1'
 
-    def test_sync_users_count(self):
+    def test_sync_count(self):
         settings.AUTO_DENORMALIZE = False
         user = get_user_model().objects.create_user('user', 'user@example.com', '$ecret')
 
         registry.register([Recipe1, Recipe2])
         commands.sync_badges()
-        updated, unchanged = commands.sync_users_count()
+        updated, unchanged = commands.sync_counts()
         self.assertEqual(len(updated), 0)
         self.assertEqual(len(unchanged), 2)
 
         Award.objects.create(user=user, badge=Badge.objects.get(slug='recipe1'))
-        updated, unchanged = commands.sync_users_count()
+        updated, unchanged = commands.sync_counts()
         self.assertEqual(len(updated), 1)
         self.assertEqual(len(unchanged), 1)
 

@@ -176,10 +176,7 @@ available commands bellow:
     $ python manage.py badgify_sync awards
 
     # Denormalize Badge.users.count() into Badge.users_count field
-    $ python manage.py badgify_sync users_counts
-
-    # Lazy? This command invoke "badges", "awards" and "users_counts"
-    $ python manage.py badgify_sync
+    $ python manage.py badgify_sync counts
 
 Commands
 --------
@@ -226,7 +223,7 @@ Takes three sub-commands:
         emulate a ``post_save`` signal at bulk create, signal receivers won't
         receive anything.
 
-``users_counts``
+``counts``
 
     Loads registered recipes and denormalizes ``badge.users.count()`` into
     ``Badge.users_count`` field. This can be a huge performance-saver.
