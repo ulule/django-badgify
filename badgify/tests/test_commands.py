@@ -46,8 +46,8 @@ class CommandsTestCase(TestCase):
     def test_sync_awards(self):
         user = get_user_model().objects.create_user('user', 'user@example.com', '$ecret')
         registry.register(Recipe1)
-        recipe = registry.get_recipe_instance('recipe1')
         created = commands.sync_badges()
+        recipe = registry.get_recipe_instance('recipe1')
         self.assertEqual(len(created), 1)
         self.assertEqual(recipe.badge.users.count(), 0)
         user.love_python = True

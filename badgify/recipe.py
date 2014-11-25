@@ -46,11 +46,25 @@ class BaseRecipe(object):
 
     @property
     def badge(self):
-        obj = None
+        return self.cached_badge or self.uncached_badge
+
+    @cached_property
+    def cached_badge(self):
+        return self.get_badge()
+
+    @property
+    def uncached_badge(self):
+        return self.get_badge()
+
+    def get_badge(self):
+        """
+        The related ``Badge`` object.
+        """
         try:
-            obj = Badge.objects.get(slug=self.slug)
+            obj = Badge.objects.using(self.db_read).get(slug=self.slug)
+            logger.debug('✓ Badge %s: fetched from db', obj.slug)
         except Badge.DoesNotExist:
-            pass
+            obj = None
         return obj
 
     def create_badge(self):
@@ -112,6 +126,7 @@ class BaseRecipe(object):
         old_value, new_value = badge.users_count, badge.users.count()
 
         if old_value != new_value:
+            badge = Badge.objects.get(slug=self.slug) # write from master
             badge.users_count = new_value
             badge.save()
             updated = True
