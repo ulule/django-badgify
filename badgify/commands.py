@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
 from django.db import reset_queries
+from django.db.models import signals
 
 from . import registry
+from . import settings
+from .models import Award
 from .utils import log_queries
+from .signals import increment_badge_users_count
 
 
 def sync_badges(**kwargs):
@@ -32,7 +36,6 @@ def sync_users_count(**kwargs):
     excluded = kwargs.get('exclude_badges')
 
     instances = registry.get_recipe_instances(badges=badges, excluded=excluded)
-
     updated_badges, unchanged_badges = [], []
 
     for instance in instances:
@@ -54,9 +57,20 @@ def sync_awards(**kwargs):
     badges = kwargs.get('badges')
     excluded = kwargs.get('exclude_badges')
 
+    auto_denormalize = kwargs.get('auto_denormalize')
+    award_post_save = kwargs.get('award_post_save')
+
+    if auto_denormalize is None:
+        auto_denormalize = settings.AUTO_DENORMALIZE
+
+    if award_post_save is None:
+        award_post_save = settings.AWARD_POST_SAVE
+
+    settings.AUTO_DENORMALIZE = False if not auto_denormalize else True
+
     instances = registry.get_recipe_instances(badges=badges, excluded=excluded)
 
     for instance in instances:
         reset_queries()
-        instance.create_awards()
+        instance.create_awards(post_save_signal=award_post_save)
         log_queries(instance)

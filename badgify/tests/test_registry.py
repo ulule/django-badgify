@@ -2,16 +2,13 @@
 from django.test import TestCase
 
 from ..exceptions import BadgeNotFound
-from ..models import Badge, Award
 from ..recipe import BaseRecipe
 from ..registry import BadgifyRegistry as Registry
-from ..compat import get_user_model
 
 from .recipes import (
     Recipe1,
     Recipe2,
-    BadRecipe,
-    NotImplementedRecipe)
+    BadRecipe)
 
 
 class RegistryTestCase(TestCase):

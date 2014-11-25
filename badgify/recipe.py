@@ -5,11 +5,9 @@ import logging
 
 from django.db import DEFAULT_DB_ALIAS, IntegrityError
 from django.db.models import signals
-from django.db.models.query import QuerySet
 from django.utils.functional import cached_property
 
 from . import settings
-from .compat import get_user_model
 from .models import Badge, Award
 from .utils import chunks
 
@@ -62,7 +60,7 @@ class BaseRecipe(object):
         """
         try:
             obj = Badge.objects.using(self.db_read).get(slug=self.slug)
-            logger.debug('✓ Badge %s: fetched from db', obj.slug)
+            logger.debug('✓ Badge %s: fetched from db (%s)', obj.slug, self.db_read)
         except Badge.DoesNotExist:
             obj = None
         return obj
@@ -123,8 +121,7 @@ class BaseRecipe(object):
         """
         logger.debug('→ Badge %s: syncing users count...', self.slug)
 
-        badge = self.badge
-        updated = False
+        badge, updated = self.badge, False
 
         if not badge:
             logger.debug(
@@ -135,7 +132,7 @@ class BaseRecipe(object):
         old_value, new_value = badge.users_count, badge.users.count()
 
         if old_value != new_value:
-            badge = Badge.objects.get(slug=self.slug) # write from master
+            badge = Badge.objects.get(slug=self.slug)
             badge.users_count = new_value
             badge.save()
             updated = True
@@ -198,11 +195,13 @@ class BaseRecipe(object):
 
         return (unawarded_ids, unawarded_ids_count)
 
-    def save_award_objects(self):
+    def create_awards(self, post_save_signal=True):
         """
-        Returns a list of ``Award`` objects ready to be saved.
+        Create awards.
         """
-        User = get_user_model()
+        if not self.can_perform_awarding():
+            return
+
         unawarded_ids, unawarded_ids_count = self.get_unawarded_user_ids()
 
         if not unawarded_ids:
@@ -219,24 +218,21 @@ class BaseRecipe(object):
                 unawarded_ids_count,
                 self.db_read)
             objects = [Award(user_id=user_id, badge=self.badge) for user_id in user_ids]
-            bulk_create_awards(recipe=self, objects=objects, batch_size=self.max_awards_per_create)
-
-    def create_awards(self):
-        """
-        Create awards.
-        """
-        if self.can_perform_awarding():
-            return self.save_award_objects()
+            bulk_create_awards(
+                recipe=self,
+                objects=objects,
+                batch_size=self.max_awards_per_create,
+                post_save_signal=post_save_signal)
 
 
-def bulk_create_awards(recipe, objects, batch_size):
+def bulk_create_awards(recipe, objects, batch_size, post_save_signal=True):
     """
     Saves award objects.
     """
     count = len(objects)
     try:
         Award.objects.bulk_create(objects, batch_size=batch_size)
-        if not settings.SKIP_AWARD_POST_SAVE_SIGNAL:
+        if post_save_signal:
             for obj in objects:
                 signals.post_save.send(sender=obj.__class__, instance=obj, created=True)
     except IntegrityError:

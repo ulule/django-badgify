@@ -175,11 +175,10 @@ available commands bellow:
     # Update awards
     $ python manage.py badgify_sync awards
 
-    # Update denormalized fields (to avoid calling .count() in templates)
-    $ python manage.py badgify_sync counts
+    # Denormalize Badge.users.count() into Badge.users_count field
+    $ python manage.py badgify_sync users_counts
 
-    # Lazy? This command invoke "badges", "awards" and "counts"
-    # ("counts" only if BADGIFY_ENABLE_BADGE_USERS_COUNT_SIGNAL setting is False).
+    # Lazy? This command invoke "badges", "awards" and "users_counts"
     $ python manage.py badgify_sync
 
 Commands
@@ -188,41 +187,58 @@ Commands
 ``badgify_sync``
 ~~~~~~~~~~~~~~~~
 
+Takes two global options (can be invoked with any subcommands):
+
 Takes three sub-commands:
 
 ``badges``
+
     Loads registered recipes and create related badges from recipe's ``name``,
     ``slug``, ``description`` and ``image`` attributes/properties.
 
 ``awards``
+
     Loads registered recipes and create awards for objects returned by recipe's
     ``user_ids`` property.
 
     **Options are:**
 
-    ``badges``
+    ``--badges "badge1 badge2"``
+
         Only creates awards for the given badge(s). For more than one badge,
         use single or double quotes and separate them with a space.
-        Example with one badge: ``badgify_sync awards --badges my-badge``
-        Example with multiple badges: ``badgify_sync awards --badges "badge-one badge-two"``
 
-    ``exclude-badges``
+    ``--exclude-badges "badge1 badge2"``
         Same as ``badges`` option. But excludes the given badges.
 
+    ``--award-post-save [on|off]``
+
+            * ``on``: sends ``post_save`` signal at award creation
+            * ``off``: bypasses it
+
+    ``--auto-denormalize [on|off]``
+
+            * ``on``: enables auto denormalization for count field
+            * ``off``: disables it
+
+        WARNING: only works with ``--award-post-save on`` (which is the default
+        behavior). As denormalization is processed by signals, if we don't
+        emulate a ``post_save`` signal at bulk create, signal receivers won't
+        receive anything.
+
 ``users_counts``
+
     Loads registered recipes and denormalizes ``badge.users.count()`` into
     ``Badge.users_count`` field. This can be a huge performance-saver.
 
     **Options are:**
 
-    ``badges``
+    ``--badges "badge1 badge2"``
         Only performs denormalization for the given badge(s). For more than one
         badge, use single or double quotes and separate them with a space.
-        Example with one badge: ``badgify_sync users_count --badges my-badge``
-        Example with multiple badges: ``badgify_sync users_count --badges "badge-one badge-two"``
 
-    ``exclude-badges``
-        Same as ``badges`` option. But excludes the given badges.
+    ``--exclude-badges "badge1 badge2"``
+        Same as ``--badges`` option. But excludes the given badges.
 
 Templatetags
 ------------
@@ -320,16 +336,13 @@ module. All application settings are prefixed with ``BADGIFY_``.
     Maximum number of ``Award`` objects to create at once.
     Defaults to ``500``.
 
-``BADGIFY_SKIP_AWARD_POST_SAVE_SIGNAL``
-    Don't send ``post_save`` signal after ``Award`` bulk create.
-    Defaults to ``False``. (Useful for development only).
+``BADGIFY_AUTO_DENORMALIZE``
+    If ``True``, populates count fields via signals.
+    Defaults to ``False`` (you have to invoke ``badgify_sync users_count`` to do so).
 
-``BADGIFY_ENABLE_BADGE_USERS_COUNT_SIGNAL``
-    Auto-increment ``badge.users_count`` field when a new award is created.
-    Defaults to ``False`` (you need to invoke ``badgify_sync counts`` explicitly
-    to auto-increment this field). If you set it to ``True``, you don't need
-    to invoke ``badgify_sync counts`` anymore. It depends on your needs and on
-    the amount of awards to create to improve performances.
+``BADGIFY_AWARD_POST_SAVE``
+    If ``True``, emulates a ``post_save`` signal after award creation during
+    bulk create. Defaults to ``True``.
 
 Development
 -----------
