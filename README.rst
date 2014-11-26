@@ -93,9 +93,9 @@ A recipe class may implement:
         The database alias on which to perform read queries.
         Defaults to ``django.db.DEFAULT_DB_ALIAS``.
 
-    ``max_awards_per_create`` class attribute
+    ``batch_size`` class attribute
         How many ``Award`` objects to create at once.
-        Defaults to ``BADGIFY_MAX_AWARDS_PER_CREATE`` (``500``).
+        Defaults to ``BADGIFY_BATCH_SIZE`` (``500``).
 
 Example:
 
@@ -169,13 +169,36 @@ available commands bellow:
 
 .. code-block:: bash
 
-    # Update badges
+    # Create badges from recipes
     $ python manage.py badgify_sync badges
 
-    # Update awards
+    # Update badges from recipes
+    $ python manage.py badgify_sync badges --update
+
+    # Create awards
     $ python manage.py badgify_sync awards
 
+    # Create awards bypassing signals (improve performances)
+    $ python manage.py badgify_sync awards --disable-signals
+
+    # Only create awards for "python" badge
+    $ python manage.py badgify_sync awards --badges python
+
+    # Only create awards for "python" and "go" badges
+    $ python manage.py badgify_sync awards --badges "python go"
+
+    # Create awards for all badges, except "php"
+    $ python manage.py badgify_sync awards --exclude-badges php
+
+    # Create awards for all badges, except "php" and "java"
+    $ python manage.py badgify_sync awards --exclude-badges "php java"
+
     # Denormalize Badge.users.count() into Badge.users_count field
+    $ python manage.py badgify_sync counts
+
+    # Typical workflow for best performances
+    $ python manage.py badgify_sync badges
+    $ python manage.py badgify_sync awards --disable-signals
     $ python manage.py badgify_sync counts
 
 Commands
@@ -319,7 +342,7 @@ module. All application settings are prefixed with ``BADGIFY_``.
     Your own concrete ``Award`` model class as module path.
     Example: ``yourapp.models.Award``.
 
-``BADGIFY_MAX_AWARDS_PER_CREATE``
+``BADGIFY_BATCH_SIZE``
     Maximum number of ``Award`` objects to create at once.
     Defaults to ``500``.
 
