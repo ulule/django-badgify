@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
 from django.db import reset_queries
-from django.db.models import signals
 
 from . import registry
 from . import settings
-from .models import Award
 from .utils import log_queries
-from .signals import increment_badge_users_count
 
 
 def sync_badges(**kwargs):
