@@ -19,19 +19,14 @@ class Command(LabelCommand):
             dest='badges',
             type='string'),
 
-        make_option('--auto-denormalize',
-            action='store',
-            dest='auto_denormalize',
-            type='string'),
-
-        make_option('--award-post-save',
-            action='store',
-            dest='award_post_save',
-            type='string'),
-
         make_option('--disable-signals',
             action='store_true',
             dest='disable_signals'),
+
+        make_option('--batch-size',
+            action='store',
+            dest='batch_size',
+            type='int'),
 
         make_option('--update',
             action='store_true',
@@ -49,27 +44,11 @@ class Command(LabelCommand):
             raise CommandError('"%s" is not a valid command.' % label)
         getattr(commands, 'sync_%s' % label)(**options)
 
-    def sanitize_options(self, options):
-        options = self.sanitize_multiples(options)
-        options = self.sanitize_switchers(options)
-        return options
-
     @staticmethod
-    def sanitize_multiples(options):
+    def sanitize_options(options):
         multiples = ['badges', 'exclude_badges']
         for option in multiples:
             value = options[option]
             if value:
                 options[option] = [v for v in value.split(' ') if v]
-        return options
-
-    @staticmethod
-    def sanitize_switchers(options):
-        switchers = ['auto_denormalize', 'award_post_save']
-        for option in switchers:
-            value = options[option]
-            if value:
-                if value not in ('on', 'off'):
-                    raise CommandError('Option "%s" only takes "on" or "off"' % option)
-                options[option] = True if value == 'on' else False
         return options

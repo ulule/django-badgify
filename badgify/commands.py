@@ -54,6 +54,7 @@ def sync_awards(**kwargs):
     badges = kwargs.get('badges')
     excluded = kwargs.get('exclude_badges')
     disable_signals = kwargs.get('disable_signals')
+    batch_size = kwargs.get('batch_size')
 
     award_post_save = True
 
@@ -65,5 +66,7 @@ def sync_awards(**kwargs):
 
     for instance in instances:
         reset_queries()
-        instance.create_awards(post_save_signal=award_post_save)
+        instance.create_awards(
+            batch_size=batch_size,
+            post_save_signal=award_post_save)
         log_queries(instance)

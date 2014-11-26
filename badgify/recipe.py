@@ -195,7 +195,7 @@ class BaseRecipe(object):
 
         return (unawarded_ids, unawarded_ids_count)
 
-    def create_awards(self, post_save_signal=True):
+    def create_awards(self, batch_size=None, post_save_signal=True):
         """
         Create awards.
         """
@@ -207,10 +207,13 @@ class BaseRecipe(object):
         if not unawarded_ids:
             return
 
+        if not batch_size:
+            batch_size = self.batch_size
+
         done_ids = 0
 
-        for user_ids in chunks(unawarded_ids, self.batch_size):
-            done_ids += self.batch_size
+        for user_ids in chunks(unawarded_ids, batch_size):
+            done_ids += batch_size
             actual_count = done_ids if done_ids <= unawarded_ids_count else unawarded_ids_count
             logger.debug("→ Badge %s: creating awards (%d / %d users) -- (db read: %s)",
                          self.slug,
@@ -220,7 +223,7 @@ class BaseRecipe(object):
             objects = [Award(user_id=user_id, badge=self.badge) for user_id in user_ids]
             bulk_create_awards(
                 objects=objects,
-                batch_size=self.batch_size,
+                batch_size=batch_size,
                 post_save_signal=post_save_signal)
 
 
