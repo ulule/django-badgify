@@ -58,9 +58,4 @@ MAX_AWARDS_PER_CREATE = getattr(
 AUTO_DENORMALIZE = getattr(
     settings,
     '%s_AUTO_DENORMALIZE' % APP_NAMESPACE,
-    False)
-
-AWARD_POST_SAVE = getattr(
-    settings,
-    '%s_AWARD_POST_SAVE' % APP_NAMESPACE,
     True)

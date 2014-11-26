@@ -53,17 +53,13 @@ def sync_awards(**kwargs):
     """
     badges = kwargs.get('badges')
     excluded = kwargs.get('exclude_badges')
+    disable_signals = kwargs.get('disable_signals')
 
-    auto_denormalize = kwargs.get('auto_denormalize')
-    award_post_save = kwargs.get('award_post_save')
+    award_post_save = True
 
-    if auto_denormalize is None:
-        auto_denormalize = settings.AUTO_DENORMALIZE
-
-    if award_post_save is None:
-        award_post_save = settings.AWARD_POST_SAVE
-
-    settings.AUTO_DENORMALIZE = False if not auto_denormalize else True
+    if disable_signals:
+        settings.AUTO_DENORMALIZE = False
+        award_post_save = False
 
     instances = registry.get_recipe_instances(badges=badges, excluded=excluded)
 

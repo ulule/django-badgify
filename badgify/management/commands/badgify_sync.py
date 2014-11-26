@@ -29,6 +29,10 @@ class Command(LabelCommand):
             dest='award_post_save',
             type='string'),
 
+        make_option('--disable-signals',
+            action='store_true',
+            dest='disable_signals'),
+
         make_option('--update',
             action='store_true',
             dest='update'),

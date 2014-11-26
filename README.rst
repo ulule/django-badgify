@@ -189,14 +189,12 @@ Takes two global options (can be invoked with any subcommands):
 Takes three sub-commands:
 
 ``badges``
-
     Loads registered recipes and create related badges from recipe's ``name``,
     ``slug``, ``description`` and ``image`` attributes/properties.
 
     **Options are:**
 
     ``--update``
-
         Updates badges if values of recipe attributes have been modified.
 
 ``awards``
@@ -207,30 +205,16 @@ Takes three sub-commands:
     **Options are:**
 
     ``--badges "badge1 badge2"``
-
         Only creates awards for the given badge(s). For more than one badge,
         use single or double quotes and separate them with a space.
 
     ``--exclude-badges "badge1 badge2"``
         Same as ``badges`` option. But excludes the given badges.
 
-    ``--award-post-save [on|off]``
-
-            * ``on``: sends ``post_save`` signal at award creation
-            * ``off``: bypasses it
-
-    ``--auto-denormalize [on|off]``
-
-            * ``on``: enables auto denormalization for count field
-            * ``off``: disables it
-
-        WARNING: only works with ``--award-post-save on`` (which is the default
-        behavior). As denormalization is processed by signals, if we don't
-        emulate a ``post_save`` signal at bulk create, signal receivers won't
-        receive anything.
+    ``--disable-signals``
+        Disables all ``post_save`` on ``Award`` objects.
 
 ``counts``
-
     Loads registered recipes and denormalizes ``badge.users.count()`` into
     ``Badge.users_count`` field. This can be a huge performance-saver.
 
@@ -338,14 +322,6 @@ module. All application settings are prefixed with ``BADGIFY_``.
 ``BADGIFY_MAX_AWARDS_PER_CREATE``
     Maximum number of ``Award`` objects to create at once.
     Defaults to ``500``.
-
-``BADGIFY_AUTO_DENORMALIZE``
-    If ``True``, populates count fields via signals.
-    Defaults to ``False`` (you have to invoke ``badgify_sync users_count`` to do so).
-
-``BADGIFY_AWARD_POST_SAVE``
-    If ``True``, emulates a ``post_save`` signal after award creation during
-    bulk create. Defaults to ``True``.
 
 Development
 -----------

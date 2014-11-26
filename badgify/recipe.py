@@ -195,15 +195,12 @@ class BaseRecipe(object):
 
         return (unawarded_ids, unawarded_ids_count)
 
-    def create_awards(self, post_save_signal=None):
+    def create_awards(self, post_save_signal=True):
         """
         Create awards.
         """
         if not self.can_perform_awarding():
             return
-
-        if post_save_signal is None:
-            post_save_signal = settings.AWARD_POST_SAVE
 
         unawarded_ids, unawarded_ids_count = self.get_unawarded_user_ids()
 
