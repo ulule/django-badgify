@@ -210,55 +210,6 @@ available commands bellow:
     $ python manage.py badgify_sync awards --disable-signals
     $ python manage.py badgify_sync counts
 
-Commands
---------
-
-``badgify_sync``
-~~~~~~~~~~~~~~~~
-
-Takes two global options (can be invoked with any subcommands):
-
-Takes three sub-commands:
-
-``badges``
-    Loads registered recipes and create related badges from recipe's ``name``,
-    ``slug``, ``description`` and ``image`` attributes/properties.
-
-    **Options are:**
-
-    ``--update``
-        Updates badges if values of recipe attributes have been modified.
-
-``awards``
-
-    Loads registered recipes and create awards for objects returned by recipe's
-    ``user_ids`` property.
-
-    **Options are:**
-
-    ``--badges "badge1 badge2"``
-        Only creates awards for the given badge(s). For more than one badge,
-        use single or double quotes and separate them with a space.
-
-    ``--exclude-badges "badge1 badge2"``
-        Same as ``badges`` option. But excludes the given badges.
-
-    ``--disable-signals``
-        Disables all ``post_save`` on ``Award`` objects.
-
-``counts``
-    Loads registered recipes and denormalizes ``badge.users.count()`` into
-    ``Badge.users_count`` field. This can be a huge performance-saver.
-
-    **Options are:**
-
-    ``--badges "badge1 badge2"``
-        Only performs denormalization for the given badge(s). For more than one
-        badge, use single or double quotes and separate them with a space.
-
-    ``--exclude-badges "badge1 badge2"``
-        Same as ``--badges`` option. But excludes the given badges.
-
 Templatetags
 ------------
 
