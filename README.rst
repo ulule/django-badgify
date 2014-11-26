@@ -196,6 +196,15 @@ available commands bellow:
     # Denormalize Badge.users.count() into Badge.users_count field
     $ python manage.py badgify_sync counts
 
+    # Only denormalize counts for "python" badge
+    $ python manage.py badgify_sync counts --badges python
+
+    # Denormalize counts for all badges, except "php"
+    $ python manage.py badgify_sync counts --exclude-badges php
+
+    # Denormalize counts for all badges, except "php" and "java"
+    $ python manage.py badgify_sync counts --exclude-badges "php java"
+
     # Typical workflow for best performances
     $ python manage.py badgify_sync badges
     $ python manage.py badgify_sync awards --disable-signals
