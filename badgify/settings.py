@@ -50,9 +50,9 @@ AWARD_MODEL = getattr(
     '%s_AWARD_MODEL' % APP_NAMESPACE,
     'badgify.models.award.Award')
 
-MAX_AWARDS_PER_CREATE = getattr(
+BATCH_SIZE = getattr(
     settings,
-    '%s_MAX_AWARDS_PER_CREATE' % APP_NAMESPACE,
+    '%s_BATCH_SIZE' % APP_NAMESPACE,
     500)
 
 AUTO_DENORMALIZE = getattr(

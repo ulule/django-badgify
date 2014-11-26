@@ -32,7 +32,7 @@ class BaseRecipe(object):
     db_read = DEFAULT_DB_ALIAS
 
     # How many awards to create at once
-    max_awards_per_create = settings.MAX_AWARDS_PER_CREATE
+    batch_size = settings.BATCH_SIZE
 
     @property
     def image(self):
@@ -139,13 +139,13 @@ class BaseRecipe(object):
 
         if updated:
             logger.debug('✓ Badge %s: updated users count (from %d to %d)',
-                self.slug,
-                old_value,
-                new_value)
+                         self.slug,
+                         old_value,
+                         new_value)
         else:
             logger.debug('✓ Badge %s: users count up-to-date (%d)',
-                self.slug,
-                new_value)
+                         self.slug,
+                         new_value)
 
         return (badge, updated)
 
@@ -209,18 +209,18 @@ class BaseRecipe(object):
 
         done_ids = 0
 
-        for user_ids in chunks(unawarded_ids, self.max_awards_per_create):
-            done_ids += self.max_awards_per_create
+        for user_ids in chunks(unawarded_ids, self.batch_size):
+            done_ids += self.batch_size
             actual_count = done_ids if done_ids <= unawarded_ids_count else unawarded_ids_count
             logger.debug("→ Badge %s: creating awards (%d / %d users) -- (db read: %s)",
-                self.slug,
-                actual_count,
-                unawarded_ids_count,
-                self.db_read)
+                         self.slug,
+                         actual_count,
+                         unawarded_ids_count,
+                         self.db_read)
             objects = [Award(user_id=user_id, badge=self.badge) for user_id in user_ids]
             bulk_create_awards(
                 objects=objects,
-                batch_size=self.max_awards_per_create,
+                batch_size=self.batch_size,
                 post_save_signal=post_save_signal)
 
 
