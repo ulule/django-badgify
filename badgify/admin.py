@@ -5,6 +5,7 @@ from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 
 from .models import Badge, Award
+from . import settings
 
 
 class BadgeAdmin(admin.ModelAdmin):
@@ -24,8 +25,8 @@ class BadgeAdmin(admin.ModelAdmin):
 
     def link(self, obj):
         return format_html('<a href="{0}">{1}</a>',
-            self.view_on_site(obj),
-            self.view_on_site(obj))
+                           self.view_on_site(obj),
+                           self.view_on_site(obj))
     link.short_description = _('link')
     link.allow_tags = True
 
@@ -50,5 +51,6 @@ class AwardAdmin(admin.ModelAdmin):
         'badge__description')
 
 
-admin.site.register(Badge, BadgeAdmin)
-admin.site.register(Award, AwardAdmin)
+if settings.REGISTER_ADMIN:
+    admin.site.register(Badge, BadgeAdmin)
+    admin.site.register(Award, AwardAdmin)

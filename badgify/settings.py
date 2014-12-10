@@ -4,6 +4,11 @@ from django.conf import settings
 
 APP_NAMESPACE = 'BADGIFY'
 
+REGISTER_ADMIN = getattr(
+    settings,
+    '%s_REGISTER_ADMIN' % APP_NAMESPACE,
+    True)
+
 
 BADGE_IMAGE_UPLOAD_ROOT = getattr(
     settings,
