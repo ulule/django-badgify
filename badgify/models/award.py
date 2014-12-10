@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-from . import base
+from .base.award import Award as BaseAward
 
 
-class Award(base.Award):
-    class Meta(base.Award.Meta):
+class Award(BaseAward):
+    class Meta(BaseAward.Meta):
         abstract = False

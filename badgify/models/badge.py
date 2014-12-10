@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-from . import base
+from .base.badge import Badge as BaseBadge
 
 
-class Badge(base.Badge):
-    class Meta(base.Badge.Meta):
+class Badge(BaseBadge):
+    class Meta(BaseBadge.Meta):
         abstract = False
