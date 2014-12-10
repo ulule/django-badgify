@@ -7,6 +7,7 @@ from django.utils.text import slugify
 
 from .. import compat
 from ..utils import get_model_string
+from . import settings
 
 
 @python_2_unicode_compatible
@@ -31,7 +32,10 @@ class Badge(models.Model):
         verbose_name=_('description'),
         help_text=_('The badge description'))
 
-    image = compat.get_image_field()
+    image = models.ImageField(null=True, blank=True,
+                              verbose_name=_('Image'),
+                              help_text=_('Please, upload an image for this badge'),
+                              upload_to=settings.BADGE_IMAGE_UPLOAD_ROOT)
 
     users = models.ManyToManyField(
         compat.AUTH_USER_MODEL,
