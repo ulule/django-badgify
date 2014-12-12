@@ -19,6 +19,11 @@ class Command(LabelCommand):
             dest='badges',
             type='string'),
 
+        make_option('--db-read',
+            action='store',
+            dest='db_read',
+            type='string'),
+
         make_option('--disable-signals',
             action='store_true',
             dest='disable_signals'),
