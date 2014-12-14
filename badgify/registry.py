@@ -36,12 +36,12 @@ class BadgifyRegistry(object):
         """
         Registers a new recipe class.
         """
-        if isinstance(recipe, (list, tuple)):
-            for item in recipe:
-                recipe = self.get_recipe_instance_from_class(item)
-                self._registry[recipe.slug] = recipe
-        else:
-            recipe = self.get_recipe_instance_from_class(recipe)
+
+        if not isinstance(recipe, (list, tuple)):
+            recipe = [recipe, ]
+
+        for item in recipe:
+            recipe = self.get_recipe_instance_from_class(item)
             self._registry[recipe.slug] = recipe
 
     def unregister(self, recipe):

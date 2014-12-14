@@ -149,42 +149,49 @@ class BaseRecipe(object):
 
         return (badge, updated)
 
-    def get_already_awarded_user_ids(self):
+    def get_already_awarded_user_ids(self, db_read=None):
         """
         Returns already awarded user ids and the count.
         """
-        already_awarded_ids = self.badge.users.values_list('id', flat=True)
+
+        db_read = db_read or self.db_read
+
+        already_awarded_ids = self.badge.users.using(db_read).values_list('id', flat=True)
         already_awarded_ids_count = len(already_awarded_ids)
 
         logger.debug(
             "→ Badge %s: %d users already awarded (fetched from db '%s')",
             self.slug,
             already_awarded_ids_count,
-            self.db_read)
+            db_read)
 
         return already_awarded_ids
 
-    def get_current_user_ids(self):
+    def get_current_user_ids(self, db_read=None):
         """
         Returns current user ids and the count.
         """
-        current_ids = self.user_ids.using(self.db_read)
+        db_read = db_read or self.db_read
+
+        current_ids = self.user_ids.using(db_read)
         current_ids_count = len(current_ids)
 
         logger.debug(
             "→ Badge %s: %d users to check (fetched from db '%s')",
             self.slug,
             current_ids_count,
-            self.db_read)
+            db_read)
 
         return current_ids
 
-    def get_unawarded_user_ids(self):
+    def get_unawarded_user_ids(self, db_read=None):
         """
         Returns unawarded user ids (need to be saved) and the count.
         """
-        already_awarded_ids = self.get_already_awarded_user_ids()
-        current_ids = self.get_current_user_ids()
+        db_read = db_read or self.db_read
+
+        already_awarded_ids = self.get_already_awarded_user_ids(db_read=db_read)
+        current_ids = self.get_current_user_ids(db_read=db_read)
         unawarded_ids = list(set(current_ids) - set(already_awarded_ids))
         unawarded_ids_count = len(unawarded_ids)
 
@@ -195,20 +202,22 @@ class BaseRecipe(object):
 
         return (unawarded_ids, unawarded_ids_count)
 
-    def create_awards(self, batch_size=None, post_save_signal=True):
+    def create_awards(self, db_read=None, batch_size=None,
+                      post_save_signal=True):
         """
         Create awards.
         """
         if not self.can_perform_awarding():
             return
 
-        unawarded_ids, unawarded_ids_count = self.get_unawarded_user_ids()
+        db_read = db_read or self.db_read
+
+        unawarded_ids, unawarded_ids_count = self.get_unawarded_user_ids(db_read=db_read)
 
         if not unawarded_ids:
             return
 
-        if not batch_size:
-            batch_size = self.batch_size
+        batch_size = batch_size or self.batch_size
 
         done_ids = 0
 
@@ -219,7 +228,7 @@ class BaseRecipe(object):
                          self.slug,
                          actual_count,
                          unawarded_ids_count,
-                         self.db_read)
+                         db_read)
             objects = [Award(user_id=user_id, badge=self.badge) for user_id in user_ids]
             bulk_create_awards(
                 objects=objects,

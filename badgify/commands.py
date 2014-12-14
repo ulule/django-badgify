@@ -11,14 +11,11 @@ def sync_badges(**kwargs):
     Iterates over registered recipes and creates missing badges.
     """
     update = kwargs.get('update', False)
-    db_read = kwargs.get('db_read')
     created_badges = []
     instances = registry.get_recipe_instances()
 
     for instance in instances:
         reset_queries()
-        if db_read:
-            instance.db_read = db_read
         badge, created = instance.create_badge(update=update)
         if created:
             created_badges.append(badge)
@@ -34,15 +31,12 @@ def sync_counts(**kwargs):
     """
     badges = kwargs.get('badges')
     excluded = kwargs.get('exclude_badges')
-    db_read = kwargs.get('db_read')
 
     instances = registry.get_recipe_instances(badges=badges, excluded=excluded)
     updated_badges, unchanged_badges = [], []
 
     for instance in instances:
         reset_queries()
-        if db_read:
-            instance.db_read = db_read
         badge, updated = instance.update_badge_users_count()
         if updated:
             updated_badges.append(badge)
@@ -60,8 +54,8 @@ def sync_awards(**kwargs):
     badges = kwargs.get('badges')
     excluded = kwargs.get('exclude_badges')
     disable_signals = kwargs.get('disable_signals')
-    batch_size = kwargs.get('batch_size')
-    db_read = kwargs.get('db_read')
+    batch_size = kwargs.get('batch_size', None)
+    db_read = kwargs.get('db_read', None)
 
     award_post_save = True
 
@@ -73,9 +67,8 @@ def sync_awards(**kwargs):
 
     for instance in instances:
         reset_queries()
-        if db_read:
-            instance.db_read = db_read
         instance.create_awards(
             batch_size=batch_size,
+            db_read=db_read,
             post_save_signal=award_post_save)
         log_queries(instance)
