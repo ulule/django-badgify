@@ -67,8 +67,7 @@ def sync_awards(**kwargs):
 
     for instance in instances:
         reset_queries()
-        instance.create_awards(
-            batch_size=batch_size,
-            db_read=db_read,
-            post_save_signal=award_post_save)
+        instance.sync_awards(batch_size=batch_size,
+                             db_read=db_read,
+                             post_save_signal=award_post_save)
         log_queries(instance)
