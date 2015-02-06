@@ -2,10 +2,6 @@
 import os
 from setuptools import setup, find_packages
 
-# Vagrant / tox workaround (http://bugs.python.org/issue8876#msg208792)
-if os.environ.get('USER', '') == 'vagrant':
-    del os.link
-
 root = os.path.abspath(os.path.dirname(__file__))
 
 with open(os.path.join(root, 'README.rst')) as f:

@@ -309,59 +309,21 @@ module. All application settings are prefixed with ``BADGIFY_``.
 Development
 -----------
 
-Installation
-~~~~~~~~~~~~
-
-Install `VirtualBox <https://www.virtualbox.org/>`_ and
-`Vagrant <https://www.vagrantup.com/>`_.
-
-Then, let's go:
-
 .. code-block:: bash
 
+    # Don't have pip?
+    $ sudo easy_install pip
+
+    # Don't already have virtualenv?
+    $ sudo pip install virtualenv
+
+    # Clone and install dependencies
     $ git clone https://github.com/ulule/django-badgify.git
     $ cd django-badgify
-    $ vagrant up & vagrant ssh
-    $ cd /vagrant
     $ make install
-    $ source .venv/bin/activate
 
-Example
-~~~~~~~
+    # Launch tests
+    $ make test
 
-Run the example project:
-
-.. code-block:: bash
-
-    $ vagrant ssh
-    $ cd /vagrant
-    $ source .venv/bin/activate
-    $ make example
-
-Tests
-~~~~~
-
-Execute the test suite:
-
-.. code-block:: bash
-
-    $ vagrant ssh
-    $ cd /vagrant
-    $ tox
-
-Compatibility
--------------
-
-This package is compatible with:
-
-- python2.6, django1.5
-- python2.6, django1.6
-- python2.7, django1.5
-- python2.7, django1.6
-- python2.7, django1.7
-- python3.3, django1.5
-- python3.3, django1.6
-- python3.3, django1.7
-- python3.4, django1.5
-- python3.4, django1.6
-- python3.4, django1.7
+    # Launch example project
+    $ make serve
