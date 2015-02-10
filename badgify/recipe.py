@@ -40,11 +40,7 @@ class BaseRecipe(object):
 
     @property
     def user_ids(self):
-        return Award.objects.none()
-
-    @property
-    def user_ids_to_remove(self):
-        return Award.objects.none()
+        pass
 
     @property
     def badge(self):
@@ -153,7 +149,7 @@ class BaseRecipe(object):
 
         return (badge, updated)
 
-    def get_already_awarded_user_ids(self, db_read=None, show_log=True):
+    def get_already_awarded_user_ids(self, db_read=None):
         """
         Returns already awarded user ids and the count.
         """
@@ -163,12 +159,11 @@ class BaseRecipe(object):
         already_awarded_ids = self.badge.users.using(db_read).values_list('id', flat=True)
         already_awarded_ids_count = len(already_awarded_ids)
 
-        if show_log:
-            logger.debug(
-                "→ Badge %s: %d users already awarded (fetched from db '%s')",
-                self.slug,
-                already_awarded_ids_count,
-                db_read)
+        logger.debug(
+            "→ Badge %s: %d users already awarded (fetched from db '%s')",
+            self.slug,
+            already_awarded_ids_count,
+            db_read)
 
         return already_awarded_ids
 
@@ -188,26 +183,6 @@ class BaseRecipe(object):
             db_read)
 
         return current_ids
-
-    def get_current_user_ids_to_remove(self, db_read=None):
-        """
-        Returns current user ids to remove.
-        """
-        db_read = db_read or self.db_read
-        return self.user_ids_to_remove.using(db_read)
-
-    def get_user_ids_to_remove(self, db_read=None):
-        """
-        Returns user ids to remove.
-        """
-        ids_to_remove = self.get_current_user_ids_to_remove(db_read=db_read)
-        awarded_ids = self.get_already_awarded_user_ids(db_read=db_read, show_log=False)
-        ids = list(set(awarded_ids).intersection(set(ids_to_remove)))
-        ids_count = len(ids)
-
-        logger.debug('→ Badge %s: %d users to check for removing...', self.slug, ids_count)
-
-        return ids
 
     def get_unawarded_user_ids(self, db_read=None):
         """
@@ -232,6 +207,9 @@ class BaseRecipe(object):
         """
         Create awards.
         """
+        if not self.can_perform_awarding():
+            return
+
         db_read = db_read or self.db_read
 
         unawarded_ids, unawarded_ids_count = self.get_unawarded_user_ids(db_read=db_read)
@@ -256,49 +234,6 @@ class BaseRecipe(object):
                 objects=objects,
                 batch_size=batch_size,
                 post_save_signal=post_save_signal)
-
-    def remove_awards(self, db_read=None, batch_size=None):
-        """
-        Removes awards.
-        """
-        ids = self.get_user_ids_to_remove(db_read=db_read)
-
-        if not ids:
-            logger.debug(
-                '→ Badge %s: no user ids to remove',
-                self.slug)
-            return
-
-        db_read = db_read or self.db_read
-        batch_size = batch_size or self.batch_size
-
-        ids_count = len(ids)
-        done_ids = 0
-
-        for user_ids in chunks(ids, batch_size):
-            qs = Award.objects.filter(id__in=user_ids)
-            if qs.exists():
-                qs.delete()
-                done_ids += batch_size
-                actual_count = done_ids if done_ids <= ids_count else ids_count
-                logger.debug("→ Badge %s: deleting awards (%d / %d users) -- (db read: %s)",
-                             self.slug,
-                             actual_count,
-                             ids_count,
-                             db_read)
-
-    def sync_awards(self, db_read=None, batch_size=None, post_save_signal=True):
-        """
-        Syncs awards.
-        """
-        if not self.can_perform_awarding():
-            return
-
-        if self.user_ids:
-            self.create_awards(db_read=db_read, batch_size=batch_size, post_save_signal=post_save_signal)
-
-        if self.user_ids_to_remove:
-            self.remove_awards(db_read=db_read, batch_size=batch_size)
 
 
 def bulk_create_awards(objects, batch_size=500, post_save_signal=True):
