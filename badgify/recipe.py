@@ -149,7 +149,7 @@ class BaseRecipe(object):
 
         return (badge, updated)
 
-    def get_already_awarded_user_ids(self, db_read=None):
+    def get_already_awarded_user_ids(self, db_read=None, show_log=True):
         """
         Returns already awarded user ids and the count.
         """
@@ -159,11 +159,12 @@ class BaseRecipe(object):
         already_awarded_ids = self.badge.users.using(db_read).values_list('id', flat=True)
         already_awarded_ids_count = len(already_awarded_ids)
 
-        logger.debug(
-            "→ Badge %s: %d users already awarded (fetched from db '%s')",
-            self.slug,
-            already_awarded_ids_count,
-            db_read)
+        if show_log:
+            logger.debug(
+                "→ Badge %s: %d users already awarded (fetched from db '%s')",
+                self.slug,
+                already_awarded_ids_count,
+                db_read)
 
         return already_awarded_ids
 
@@ -175,12 +176,6 @@ class BaseRecipe(object):
 
         current_ids = self.user_ids.using(db_read)
         current_ids_count = len(current_ids)
-
-        logger.debug(
-            "→ Badge %s: %d users to check (fetched from db '%s')",
-            self.slug,
-            current_ids_count,
-            db_read)
 
         return current_ids
 
@@ -202,6 +197,24 @@ class BaseRecipe(object):
 
         return (unawarded_ids, unawarded_ids_count)
 
+    def get_obsolete_user_ids(self, db_read=None):
+        """
+        Returns obsolete users IDs to unaward.
+        """
+        db_read = db_read or self.db_read
+
+        already_awarded_ids = self.get_already_awarded_user_ids(db_read=db_read, show_log=False)
+        current_ids = self.get_current_user_ids(db_read=db_read)
+        obsolete_ids = list(set(already_awarded_ids) - set(current_ids))
+        obsolete_ids_count = len(obsolete_ids)
+
+        logger.debug(
+            '→ Badge %s: %d users need to be unawarded',
+            self.slug,
+            obsolete_ids_count)
+
+        return (obsolete_ids, obsolete_ids_count)
+
     def create_awards(self, db_read=None, batch_size=None,
                       post_save_signal=True):
         """
@@ -211,29 +224,38 @@ class BaseRecipe(object):
             return
 
         db_read = db_read or self.db_read
-
-        unawarded_ids, unawarded_ids_count = self.get_unawarded_user_ids(db_read=db_read)
-
-        if not unawarded_ids:
-            return
-
         batch_size = batch_size or self.batch_size
 
-        done_ids = 0
+        unawarded_ids, unawarded_ids_count = self.get_unawarded_user_ids(db_read=db_read)
+        obsolete_ids, obsolete_ids_count = self.get_obsolete_user_ids(db_read=db_read)
 
-        for user_ids in chunks(unawarded_ids, batch_size):
-            done_ids += batch_size
-            actual_count = done_ids if done_ids <= unawarded_ids_count else unawarded_ids_count
-            logger.debug("→ Badge %s: creating awards (%d / %d users) -- (db read: %s)",
-                         self.slug,
-                         actual_count,
-                         unawarded_ids_count,
-                         db_read)
-            objects = [Award(user_id=user_id, badge=self.badge) for user_id in user_ids]
-            bulk_create_awards(
-                objects=objects,
-                batch_size=batch_size,
-                post_save_signal=post_save_signal)
+        if obsolete_ids:
+            removed_ids_done = 0
+            for user_ids in chunks(obsolete_ids, batch_size):
+                removed_ids_done += batch_size
+                actual_count = removed_ids_done if removed_ids_done <= obsolete_ids_count else obsolete_ids_count
+                logger.debug("→ Badge %s: removing awards (%d / %d users) -- (db read: %s)",
+                             self.slug,
+                             actual_count,
+                             obsolete_ids_count,
+                             db_read)
+                Award.objects.filter(user__in=user_ids).delete()
+
+        if unawarded_ids:
+            done_ids = 0
+            for user_ids in chunks(unawarded_ids, batch_size):
+                done_ids += batch_size
+                actual_count = done_ids if done_ids <= unawarded_ids_count else unawarded_ids_count
+                logger.debug("→ Badge %s: creating awards (%d / %d users) -- (db read: %s)",
+                             self.slug,
+                             actual_count,
+                             unawarded_ids_count,
+                             db_read)
+                objects = [Award(user_id=user_id, badge=self.badge) for user_id in user_ids]
+                bulk_create_awards(
+                    objects=objects,
+                    batch_size=batch_size,
+                    post_save_signal=post_save_signal)
 
 
 def bulk_create_awards(objects, batch_size=500, post_save_signal=True):
