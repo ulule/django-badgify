@@ -1,9 +1,17 @@
 # -*- coding: utf-8 -*-
-from django.db import reset_queries
+from __future__ import unicode_literals
+
+import logging
+
+from django.db import reset_queries, DEFAULT_DB_ALIAS
+from django.db.models import Count
 
 from . import registry
 from . import settings
+from .models import Badge
 from .utils import log_queries
+
+logger = logging.getLogger('badgify')
 
 
 def sync_badges(**kwargs):
@@ -72,3 +80,18 @@ def sync_awards(**kwargs):
             db_read=db_read,
             post_save_signal=award_post_save)
         log_queries(instance)
+
+
+def show_stats(**kwargs):
+    """
+    Shows badges stats.
+    """
+    db_read = kwargs.get('db_read', DEFAULT_DB_ALIAS)
+
+    badges = (Badge.objects.using(db_read)
+                           .all()
+                           .annotate(u_count=Count('users'))
+                           .order_by('u_count'))
+
+    for badge in badges:
+        logger.info('{:<20} {:>10} users awarded'.format(badge.name, badge.users.count()))
