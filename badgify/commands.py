@@ -8,7 +8,7 @@ from django.db.models import Count
 
 from . import registry
 from . import settings
-from .models import Badge
+from .models import Badge, Award
 from .utils import log_queries
 
 logger = logging.getLogger('badgify')
@@ -98,3 +98,14 @@ def show_stats(**kwargs):
             badge.name,
             badge.u_count,
             badge.users_count))
+
+
+def reset_awards(**kwargs):
+    """
+    Resets badges stats.
+    """
+    Award.objects.all().delete()
+    logger.info('✓ Deleted all awards')
+
+    Badge.objects.update(users_count=0)
+    logger.info('✓ Reseted badge users count fields')
