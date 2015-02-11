@@ -210,6 +210,15 @@ available commands bellow:
     $ python manage.py badgify_sync awards --disable-signals
     $ python manage.py badgify_sync counts
 
+    # WARNING: if you delete awards to start again with a fresh table
+    # don't forget to update Badge.users_count field. Or use this command:
+    $ python manage.py badgify_reset
+
+    # Typical workflow for best performances if you want to recompute awards
+    $ python manage.py badgify_reset
+    $ python manage.py badgify_sync awards --disable-signals
+    $ python manage.py badgify_sync counts
+
 Templatetags
 ------------
 
