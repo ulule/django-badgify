@@ -94,4 +94,7 @@ def show_stats(**kwargs):
                            .order_by('u_count'))
 
     for badge in badges:
-        logger.info('{:<20} {:>10} users awarded'.format(badge.name, badge.users.count()))
+        logger.info('{:<20} {:>10} users awarded | users_count: {})'.format(
+            badge.name,
+            badge.u_count,
+            badge.users_count))
