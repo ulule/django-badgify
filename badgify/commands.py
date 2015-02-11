@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 import logging
 
 from django.db import reset_queries, DEFAULT_DB_ALIAS
-from django.db.models import Count
+from django.db.models import Count, signals
 
 from . import registry
 from . import settings
@@ -104,8 +104,32 @@ def reset_awards(**kwargs):
     """
     Resets badges stats.
     """
-    Award.objects.all().delete()
-    logger.info('✓ Deleted all awards')
+    filter_badges = kwargs.get('badges', None)
+    exclude_badges = kwargs.get('exclude_badges', None)
 
-    Badge.objects.update(users_count=0)
-    logger.info('✓ Reseted badge users count fields')
+    for option in [filter_badges, exclude_badges]:
+        if option:
+            if not isinstance(option, (list, tuple)):
+                option = [option]
+
+    signals.pre_delete.disconnect(sender=Award,
+                                  dispatch_uid='badgify.award.pre_delete.decrement_badge_users_count')
+
+    award_qs = Award.objects.all()
+    badge_qs = Badge.objects.all()
+
+    if filter_badges:
+        award_qs = award_qs.filter(badge__slug__in=filter_badges)
+        badge_qs = badge_qs.filter(slug__in=filter_badges)
+
+    if exclude_badges:
+        award_qs = award_qs.exclude(badge__slug__in=exclude_badges)
+        badge_qs = badge_qs.exclude(slug__in=exclude_badges)
+
+    awards_count = award_qs.count()
+    award_qs.delete()
+    logger.info('✓ Deleted %d awards', awards_count)
+
+    badges_count = badge_qs.count()
+    badge_qs.update(users_count=0)
+    logger.info('✓ Reseted Badge.users_count field of %d badge(s)', badges_count)

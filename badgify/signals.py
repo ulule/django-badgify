@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
 import logging
 
 from django.dispatch import receiver
@@ -9,31 +11,21 @@ from .models import Award
 logger = logging.getLogger('badgify')
 
 
-@receiver(post_save, sender=Award)
+@receiver(post_save, sender=Award, dispatch_uid='badgify.award.post_save.increment_badge_users_count')
 def increment_badge_users_count(sender, instance, created, **kwargs):
     from django.db.models import F
     from .settings import AUTO_DENORMALIZE
 
     if created and AUTO_DENORMALIZE:
         instance.badge.users_count = F('users_count') + 1
-
-        logger.debug('✓ Badge %s: incremented users_count field (now: %d)',
-                     instance.badge.slug,
-                     instance.badge.users_count)
-
         instance.badge.save()
 
 
-@receiver(pre_delete, sender=Award)
+@receiver(pre_delete, sender=Award, dispatch_uid='badgify.award.pre_delete.decrement_badge_users_count')
 def decrement_badge_users_count(sender, instance, **kwargs):
     from django.db.models import F
     from .settings import AUTO_DENORMALIZE
 
-    if AUTO_DENORMALIZE:
+    if AUTO_DENORMALIZE and instance.badge.users_count >= 1:
         instance.badge.users_count = F('users_count') - 1
-
-        logger.debug('✓ Badge %s: decremented users_count field (now: %d)',
-                     instance.badge.slug,
-                     instance.badge.users_count)
-
         instance.badge.save()
