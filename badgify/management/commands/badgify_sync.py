@@ -4,6 +4,7 @@ from optparse import make_option
 from django.core.management.base import LabelCommand, CommandError
 
 from badgify import commands
+from badgify.utils import sanitize_command_options
 
 
 class Command(LabelCommand):
@@ -44,16 +45,9 @@ class Command(LabelCommand):
     )
 
     def handle_label(self, label, **options):
-        options = self.sanitize_options(options)
+        options = sanitize_command_options(options)
+
         if not hasattr(commands, 'sync_%s' % label):
             raise CommandError('"%s" is not a valid command.' % label)
-        getattr(commands, 'sync_%s' % label)(**options)
 
-    @staticmethod
-    def sanitize_options(options):
-        multiples = ['badges', 'exclude_badges']
-        for option in multiples:
-            value = options[option]
-            if value:
-                options[option] = [v for v in value.split(' ') if v]
-        return options
+        getattr(commands, 'sync_%s' % label)(**options)

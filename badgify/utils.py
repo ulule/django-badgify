@@ -116,3 +116,21 @@ def log_queries(recipe):
         '⚐ Badge %s: SQL queries time %.2f second(s)',
         recipe.slug,
         sum([float(q['time']) for q in connection.queries]))
+
+
+def sanitize_command_options(options):
+    """
+    Sanitizes command options.
+    """
+    multiples = [
+        'badges',
+        'exclude_badges',
+    ]
+
+    for option in multiples:
+        if options.get(option):
+            value = options[option]
+            if value:
+                options[option] = [v for v in value.split(' ') if v]
+
+    return options
