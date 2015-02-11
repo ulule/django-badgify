@@ -13,6 +13,8 @@ from .utils import chunks
 
 logger = logging.getLogger('badgify')
 
+PRE_DELETE_UID = 'badgify.award.pre_delete.decrement_badge_users_count'
+
 
 class BaseRecipe(object):
     """
@@ -234,24 +236,31 @@ class BaseRecipe(object):
             for user_ids in chunks(obsolete_ids, batch_size):
                 removed_ids_done += batch_size
                 actual_count = removed_ids_done if removed_ids_done <= obsolete_ids_count else obsolete_ids_count
+
                 logger.debug("→ Badge %s: removing awards (%d / %d users) -- (db read: %s)",
                              self.slug,
                              actual_count,
                              obsolete_ids_count,
                              db_read)
+
+                signals.pre_delete.disconnect(sender=Award, dispatch_uid=PRE_DELETE_UID)
                 Award.objects.filter(user__in=user_ids).delete()
+                signals.pre_delete.connect(sender=Award, dispatch_uid=PRE_DELETE_UID)
 
         if unawarded_ids:
             done_ids = 0
             for user_ids in chunks(unawarded_ids, batch_size):
                 done_ids += batch_size
                 actual_count = done_ids if done_ids <= unawarded_ids_count else unawarded_ids_count
+
                 logger.debug("→ Badge %s: creating awards (%d / %d users) -- (db read: %s)",
                              self.slug,
                              actual_count,
                              unawarded_ids_count,
                              db_read)
+
                 objects = [Award(user_id=user_id, badge=self.badge) for user_id in user_ids]
+
                 bulk_create_awards(
                     objects=objects,
                     batch_size=batch_size,
