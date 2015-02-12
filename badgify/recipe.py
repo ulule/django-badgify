@@ -239,12 +239,10 @@ class BaseRecipe(object):
                 signals.pre_delete.disconnect(sender=Award, dispatch_uid=PRE_DELETE_UID)
                 Award.objects.filter(user__in=user_ids).delete()
 
-                for user in obsolete_users:
-                    logger.debug("→ Badge %s: unawarded user %s (%d) -- (db read: %s)",
-                                 self.slug,
-                                 user.username,
-                                 user.pk,
-                                 db_read)
+                logger.debug("→ Badge %s (db_read: %s): unawarded %s",
+                             self.slug,
+                             db_read,
+                             ' '.join(['%s' % user for user in obsolete_users]))
 
         if unawarded_ids:
             for user_ids in chunks(unawarded_ids, batch_size):
@@ -255,12 +253,10 @@ class BaseRecipe(object):
                                    batch_size=batch_size,
                                    post_save_signal=post_save_signal)
 
-                for user in unwarded_users:
-                    logger.debug("→ Badge %s: awarded user %s (%d) -- (db read: %s)",
-                                 self.slug,
-                                 user.username,
-                                 user.pk,
-                                 db_read)
+                logger.debug("→ Badge %s (db_read: %s): awarded %s",
+                             self.slug,
+                             db_read,
+                             ' '.join(['%s' % user for user in unwarded_users]))
 
 
 def bulk_create_awards(objects, batch_size=500, post_save_signal=True):
