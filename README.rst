@@ -222,8 +222,8 @@ available commands bellow:
 Templatetags
 ------------
 
-``badgify_badges``
-..................
+badgify_badges
+..............
 
 Takes two optional arguments:
 
