@@ -68,34 +68,34 @@ Create and register your recipe classes:
 
 A recipe class must implement:
 
-    ``name`` class attribute
-        The badge name (humanized).
+* ``name`` class attribute
+    The badge name (humanized).
 
-    ``image`` property
-        The badge image/logo as a file object.
+* ``image`` property
+    The badge image/logo as a file object.
 
 A recipe class may implement:
 
-    ``slug`` class attribute
-        The badge slug (used internally and in URLs).
-        If not provided, it will be auto-generated based on the badge name.
+* ``slug`` class attribute
+    The badge slug (used internally and in URLs).
+    If not provided, it will be auto-generated based on the badge name.
 
-    ``description`` class attribute
-        The badge description (short).
-        It not provided, value will be blank.
+* ``description`` class attribute
+    The badge description (short).
+    It not provided, value will be blank.
 
-    ``user_ids`` property
-        ``QuerySet`` returning User IDs likely to be awarded. You must return a
-        ``QuerySet`` and not just a Python list or tuple. You can use
-        ``values_list('id', flat=True)``.
+* ``user_ids`` property
+    ``QuerySet`` returning User IDs likely to be awarded. You must return a
+    ``QuerySet`` and not just a Python list or tuple. You can use
+    ``values_list('id', flat=True)``.
 
-    ``db_read`` class attribute
-        The database alias on which to perform read queries.
-        Defaults to ``django.db.DEFAULT_DB_ALIAS``.
+* ``db_read`` class attribute
+    The database alias on which to perform read queries.
+    Defaults to ``django.db.DEFAULT_DB_ALIAS``.
 
-    ``batch_size`` class attribute
-        How many ``Award`` objects to create at once.
-        Defaults to ``BADGIFY_BATCH_SIZE`` (``500``).
+* ``batch_size`` class attribute
+    How many ``Award`` objects to create at once.
+    Defaults to ``BADGIFY_BATCH_SIZE`` (``500``).
 
 Example:
 
