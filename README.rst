@@ -223,7 +223,7 @@ Templatetags
 ------------
 
 ``badgify_badges``
-~~~~~~~~~~~~~~~~~~
+..................
 
 Takes two optional arguments:
 
@@ -286,37 +286,58 @@ Settings
 --------
 
 You can altere the application behavior by defining settings in your ``settings.py``
-module. All application settings are prefixed with ``BADGIFY_``.
+module.
+
+All application settings are prefixed with ``BADGIFY_``.
 
 ``BADGIFY_BADGE_IMAGE_UPLOAD_ROOT``
-    The root path for ``Badge``  model ``ImageField``.
+...................................
+
+The root path for ``Badge``  model ``ImageField``.
 
 ``BADGIFY_BADGE_IMAGE_UPLOAD_URL``
-    The URL ``Badge``  model ``ImageField``.
+..................................
+
+The URL ``Badge``  model ``ImageField``.
 
 ``BADGIFY_BADGE_IMAGE_UPLOAD_STORAGE``
-    Your own ``django.core.files.storage`` storage instance.
+......................................
+
+Your own ``django.core.files.storage`` storage instance.
 
 ``BADGIFY_BADGE_LIST_VIEW_PAGINATE_BY``
-    Number of badges to display on the badge list page.
+.......................................
+
+Number of badges to display on the badge list page.
 
 ``BADGIFY_BADGE_DETAIL_VIEW_PAGINATE_BY``
-    Number of awarded users to display on the badge detail page.
+.........................................
+
+Number of awarded users to display on the badge detail page.
 
 ``BADGIFY_BADGE_MODEL``
-    Your own concrete ``Badge`` model class as module path.
-    Example: ``yourapp.models.Badge``.
+.......................
+
+Your own concrete ``Badge`` model class as module path.
+
+Example: ``yourapp.models.Badge``.
 
 ``BADGIFY_AWARD_MODEL``
-    Your own concrete ``Award`` model class as module path.
-    Example: ``yourapp.models.Award``.
+.......................
+
+Your own concrete ``Award`` model class as module path.
+
+Example: ``yourapp.models.Award``.
 
 ``BADGIFY_BATCH_SIZE``
-    Maximum number of ``Award`` objects to create at once.
-    Defaults to ``500``.
+......................
 
-Development
------------
+Maximum number of ``Award`` objects to create at once.
+
+Defaults to ``500``.
+
+Contribute
+----------
 
 .. code-block:: bash
 
