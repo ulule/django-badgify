@@ -3,12 +3,12 @@ from __future__ import unicode_literals
 
 import logging
 
-from django.contrib.auth.models import User
 from django.db import DEFAULT_DB_ALIAS, IntegrityError
 from django.db.models import signals
 from django.utils.functional import cached_property
 
 from . import settings
+from .compat import get_user_model
 from .models import Badge, Award
 from .utils import chunks
 
@@ -177,10 +177,7 @@ class BaseRecipe(object):
         """
         db_read = db_read or self.db_read
 
-        current_ids = self.user_ids.using(db_read)
-        current_ids_count = len(current_ids)
-
-        return current_ids
+        return self.user_ids.using(db_read)
 
     def get_unawarded_user_ids(self, db_read=None):
         """
@@ -225,6 +222,8 @@ class BaseRecipe(object):
         """
         if not self.can_perform_awarding():
             return
+
+        User = get_user_model()
 
         db_read = db_read or self.db_read
         batch_size = batch_size or self.batch_size
