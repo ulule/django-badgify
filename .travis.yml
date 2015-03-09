@@ -3,8 +3,5 @@ language: python
 python:
   - 2.7
 
-install:
-  - export PATH=$PATH:$HOME/.local/bin
-  - pip install --install-option="--prefix=$HOME/.local" -r requirements/test.txt
-
+install: pip install tox --use-mirrors
 script: tox
