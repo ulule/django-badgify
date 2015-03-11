@@ -1,7 +1,7 @@
 django-badgify
 ==============
 
-Badge app for Django.
+This Django application will help you to create your own badge system on your website.
 
 .. image:: https://secure.travis-ci.org/ulule/django-badgify.png?branch=master
     :alt: Build Status
