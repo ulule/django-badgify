@@ -32,7 +32,10 @@ Synchronize the database:
 
 .. code-block:: bash
 
+    # Django < 1.7
     $ python manage.py syncdb
+
+    # Django >= 1.7
     $ python manage.py migrate
 
 Create a ``badgify_recipes.py`` file in your Django application:
