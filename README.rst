@@ -362,3 +362,11 @@ Contribute
 
     # Launch example project
     $ make serve
+
+Compatibility
+-------------
+
+- Python 2.6: Django 1.5, 1.6
+- python 2.7: Django 1.5, 1.6, 1.7, 1.8
+- Python 3.3: Django 1.5, 1.6, 1.7, 1.8
+- Python 3.4: Django 1.5, 1.6, 1.7, 1.8
