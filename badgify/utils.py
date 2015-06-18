@@ -22,6 +22,13 @@ CLASS_PATH_ERROR = 'django-badgify is unable to interpret settings value for %s.
                    '(\'path.to.models.Class\', \'app_label\').'
 
 
+# Python 3 workaround
+try:
+    basestring
+except NameError:
+    basestring = str
+
+
 def load_class(class_path, setting_name=None):
     """
     Loads a class given a class_path. The setting value may be a string or a
@@ -53,7 +60,7 @@ def load_class(class_path, setting_name=None):
 
     try:
         mod = import_module(class_module)
-    except ImportError, e:
+    except ImportError as e:
         if setting_name:
             txt = 'Error importing backend %s: "%s". Check your %s setting' % (
                 class_module, e, setting_name)
