@@ -12,6 +12,11 @@ try:
 except ImportError:
     from django.utils.importlib import import_module
 
+try:  # 2.x
+    _range = xrange
+except NameError:  # 3.x
+    _range = range
+
 from . import settings
 
 logger = logging.getLogger(__name__)
@@ -20,6 +25,13 @@ logger = logging.getLogger(__name__)
 CLASS_PATH_ERROR = 'django-badgify is unable to interpret settings value for %s. '\
                    '%s should be in the form of a tupple: '\
                    '(\'path.to.models.Class\', \'app_label\').'
+
+
+# Python 3 workaround
+try:
+    basestring
+except NameError:
+    basestring = str
 
 
 def load_class(class_path, setting_name=None):
@@ -53,7 +65,7 @@ def load_class(class_path, setting_name=None):
 
     try:
         mod = import_module(class_module)
-    except ImportError, e:
+    except ImportError as e:
         if setting_name:
             txt = 'Error importing backend %s: "%s". Check your %s setting' % (
                 class_module, e, setting_name)
@@ -109,7 +121,7 @@ def chunks(l, n):
     """
     Yields successive n-sized chunks from l.
     """
-    for i in xrange(0, len(l), n):
+    for i in _range(0, len(l), n):
         yield l[i:i + n]
 
 
