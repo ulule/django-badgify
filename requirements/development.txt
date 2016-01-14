@@ -1,4 +1,7 @@
--r compile.txt
--r base-development.txt
+-r base.txt
+-r test.txt
 
-Django>=1.7
+Django==1.9
+Sphinx
+
+tox

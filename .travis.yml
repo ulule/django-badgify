@@ -1,7 +1,10 @@
 language: python
-
-python:
-  - 2.7
-
-install: pip install tox --use-mirrors
-script: tox
+env:
+    - TOXENV=py27-django18
+    - TOXENV=py27-django19
+    - TOXENV=py34-django18
+    - TOXENV=py34-django19
+install:
+    - travis_retry pip install tox
+script:
+    - travis_retry tox
