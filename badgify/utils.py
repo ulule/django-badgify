@@ -12,6 +12,8 @@ try:
 except ImportError:
     from django.utils.importlib import import_module
 
+import six
+
 from . import settings
 
 logger = logging.getLogger(__name__)
@@ -30,7 +32,7 @@ def load_class(class_path, setting_name=None):
 
     Borrowed from: https://github.com/thoas/django-discussions/blob/master/discussions/utils.py
     """
-    if not isinstance(class_path, basestring):
+    if not isinstance(class_path, six.string_types):
         try:
             class_path, app_label = class_path
         except:
@@ -53,7 +55,7 @@ def load_class(class_path, setting_name=None):
 
     try:
         mod = import_module(class_module)
-    except ImportError, e:
+    except ImportError as e:
         if setting_name:
             txt = 'Error importing backend %s: "%s". Check your %s setting' % (
                 class_module, e, setting_name)
@@ -109,7 +111,7 @@ def chunks(l, n):
     """
     Yields successive n-sized chunks from l.
     """
-    for i in xrange(0, len(l), n):
+    for i in range(0, len(l), n):
         yield l[i:i + n]
 
 
