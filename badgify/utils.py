@@ -14,6 +14,11 @@ except ImportError:
 
 import six
 
+try:  # 2.x
+    _range = xrange
+except NameError:  # 3.x
+    _range = range
+
 from . import settings
 
 logger = logging.getLogger(__name__)
@@ -111,7 +116,7 @@ def chunks(l, n):
     """
     Yields successive n-sized chunks from l.
     """
-    for i in range(0, len(l), n):
+    for i in _range(0, len(l), n):
         yield l[i:i + n]
 
 
