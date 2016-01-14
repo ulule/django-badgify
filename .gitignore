@@ -38,4 +38,3 @@ local_settings.py
 .env
 .vagrant
 badgify/tests/media
-example/static/vendor

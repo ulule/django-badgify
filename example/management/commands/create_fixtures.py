@@ -1,13 +1,16 @@
 # -*- coding: utf-8 -*-
 import logging
 import random
+
 from optparse import make_option
 
 from django.core import management
 from django.core.management.base import BaseCommand
 from django.db import DEFAULT_DB_ALIAS, IntegrityError
 from django.utils.text import slugify
+
 from random_words import RandomNicknames
+
 from badgify.models import Badge, Award
 
 from example.models import User

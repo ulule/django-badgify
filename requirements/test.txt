@@ -1,1 +1,4 @@
--r base-development.txt
+coverage==3.6
+flake8
+RandomWords
+South

@@ -21,6 +21,7 @@ setup(
     install_requires=[
         'Pillow==2.4.0',
         'pytz',
+        'six',
     ],
     tests_require=['coverage', 'RandomWords'],
     classifiers=[

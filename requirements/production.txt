@@ -1,4 +1,0 @@
--r compile.txt
--r base.txt
-
-Django>=1.7

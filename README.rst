@@ -32,11 +32,7 @@ Synchronize the database:
 
 .. code-block:: bash
 
-    # Django < 1.7
-    $ python manage.py syncdb
-
-    # Django >= 1.7
-    $ python manage.py migrate
+    $ python manage.py migrate badgify
 
 Create a ``badgify_recipes.py`` file in your Django application:
 
@@ -361,12 +357,11 @@ Contribute
     $ make test
 
     # Launch example project
+    $ make create_fixtures
     $ make serve
 
 Compatibility
 -------------
 
-- Python 2.6: Django 1.5, 1.6
-- python 2.7: Django 1.5, 1.6, 1.7, 1.8
-- Python 3.3: Django 1.5, 1.6, 1.7, 1.8
-- Python 3.4: Django 1.5, 1.6, 1.7, 1.8
+- python 2.7: Django 1.8, 1.9
+- Python 3.4: Django 1.8, 1.9
