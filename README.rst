@@ -361,6 +361,7 @@ Contribute
     $ make test
 
     # Launch example project
+    $ make create_fixtures
     $ make serve
 
 Compatibility
