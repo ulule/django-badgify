@@ -250,13 +250,13 @@ Views
 
 **django-badgify** provides two views:
 
-* `badgify.views.BadgifyListView`: displays all badges as paginated list
-* `badgify.views.BadgifyDetailView`: displays awarded users as paginated list for a given badge
+* ``badgify.views.BadgifyListView``: displays all badges as paginated list
+* ``badgify.views.BadgifyDetailView``: displays awarded users as paginated list for a given badge
 
 This application does not include templates. It lets you implement
 templates as you like (see example project).
 
-To include these two views, include the provided `badgify.urls`:
+To include these two views, include the provided ``badgify.urls``:
 
 .. code-block:: python
 
