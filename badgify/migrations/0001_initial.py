@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-from django.db import models, migrations
 from django.conf import settings
+from django.db import migrations, models
+import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
+
+    initial = True
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
@@ -15,41 +18,41 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Award',
             fields=[
-                ('id', models.AutoField(serialize=False, verbose_name='ID', auto_created=True, primary_key=True)),
-                ('awarded_at', models.DateTimeField(verbose_name='awarded at', auto_now_add=True)),
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('awarded_at', models.DateTimeField(auto_now_add=True, verbose_name='awarded at')),
             ],
             options={
                 'abstract': False,
-                'verbose_name_plural': 'awards',
                 'verbose_name': 'award',
+                'verbose_name_plural': 'awards',
             },
         ),
         migrations.CreateModel(
             name='Badge',
             fields=[
-                ('id', models.AutoField(serialize=False, verbose_name='ID', auto_created=True, primary_key=True)),
-                ('name', models.CharField(verbose_name='name', help_text='The badge name', max_length=255)),
-                ('slug', models.SlugField(verbose_name='slug', unique=True, help_text='The badge slug (auto-generated if empty)', blank=True, max_length=255)),
-                ('description', models.TextField(verbose_name='description', blank=True, help_text='The badge description')),
-                ('image', models.ImageField(verbose_name='Image', help_text='Please, upload an image for this badge', upload_to='badges', null=True, blank=True)),
-                ('users_count', models.IntegerField(editable=False, default=0, verbose_name='users count')),
-                ('users', models.ManyToManyField(verbose_name='users', to=settings.AUTH_USER_MODEL, help_text='Users that earned this badge', through='badgify.Award')),
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('name', models.CharField(help_text='The badge name', max_length=255, verbose_name='name')),
+                ('slug', models.SlugField(blank=True, help_text='The badge slug (auto-generated if empty)', max_length=255, unique=True, verbose_name='slug')),
+                ('description', models.TextField(blank=True, help_text='The badge description', verbose_name='description')),
+                ('image', models.ImageField(blank=True, help_text='Please, upload an image for this badge', null=True, upload_to=b'badges', verbose_name='Image')),
+                ('users_count', models.IntegerField(default=0, editable=False, verbose_name='users count')),
+                ('users', models.ManyToManyField(help_text='Users that earned this badge', through='badgify.Award', to=settings.AUTH_USER_MODEL, verbose_name='users')),
             ],
             options={
                 'abstract': False,
-                'verbose_name_plural': 'badges',
                 'verbose_name': 'badge',
+                'verbose_name_plural': 'badges',
             },
         ),
         migrations.AddField(
             model_name='award',
             name='badge',
-            field=models.ForeignKey(verbose_name='badge', to='badgify.Badge', related_name='awards'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='awards', to='badgify.Badge', verbose_name='badge'),
         ),
         migrations.AddField(
             model_name='award',
             name='user',
-            field=models.ForeignKey(verbose_name='user', to=settings.AUTH_USER_MODEL, related_name='badges'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='badges', to=settings.AUTH_USER_MODEL, verbose_name='user'),
         ),
         migrations.AlterUniqueTogether(
             name='award',

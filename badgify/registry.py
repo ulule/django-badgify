@@ -30,7 +30,7 @@ class BadgifyRegistry(object):
         """
         Returns registered recipes list (badge slugs).
         """
-        return self._registry.keys()
+        return list(self._registry.keys())
 
     def register(self, recipe):
         """

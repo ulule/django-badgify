@@ -12,6 +12,8 @@ try:
 except ImportError:
     from django.utils.importlib import import_module
 
+import six
+
 try:  # 2.x
     _range = xrange
 except NameError:  # 3.x
@@ -27,13 +29,6 @@ CLASS_PATH_ERROR = 'django-badgify is unable to interpret settings value for %s.
                    '(\'path.to.models.Class\', \'app_label\').'
 
 
-# Python 3 workaround
-try:
-    basestring
-except NameError:
-    basestring = str
-
-
 def load_class(class_path, setting_name=None):
     """
     Loads a class given a class_path. The setting value may be a string or a
@@ -42,7 +37,7 @@ def load_class(class_path, setting_name=None):
 
     Borrowed from: https://github.com/thoas/django-discussions/blob/master/discussions/utils.py
     """
-    if not isinstance(class_path, basestring):
+    if not isinstance(class_path, six.string_types):
         try:
             class_path, app_label = class_path
         except:
