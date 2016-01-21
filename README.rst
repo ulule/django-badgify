@@ -249,6 +249,31 @@ Without any argument, displays all badges. Otherwise, badges awarded by the give
         {{ badge.name }}
     {% endfor %}
 
+Views
+-----
+
+**django-badgify** provides two views:
+
+* `badgify.views.BadgifyListView`: displays all badges as paginated list
+* `badgify.views.BadgifyDetailView`: displays awarded users as paginated list for a given badge
+
+This application does not include templates. It lets you implement
+templates as you like (see example project).
+
+To include these two views, include the provided `badgify.urls`:
+
+.. code-block:: python
+
+    # -*- coding: utf-8 -*-
+    from django.conf.urls import include, url
+
+    urlpatterns = [
+        # Your other includes
+        url(r'^badges/', include('badgify.urls')),
+    ]
+
+See example project for more details.
+
 Custom Models
 -------------
 
