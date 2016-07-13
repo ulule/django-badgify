@@ -150,13 +150,13 @@ Example:
         """
         People loving Java.
         """
-        name = 'JS Lover'
-        slug = 'js-lover'
-        description = 'People loving JS programming language'
+        name = 'Java Lover'
+        slug = 'java-lover'
+        description = 'People loving Java programming language'
 
         @property
         def image(self):
-            return staticfiles_storage.open('js-lover.png')
+            return staticfiles_storage.open('java-lover.png')
 
 
     badgify.register([
