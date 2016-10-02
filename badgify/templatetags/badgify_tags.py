@@ -21,7 +21,7 @@ def badgify_badges(**kwargs):
         except User.DoesNotExist:
             pass
     if user:
-        awards = Award.objects.filter(user=user)
+        awards = Award.objects.filter(user=user).select_related('badge')
         badges = [award.badge for award in awards]
         return badges
     return Badge.objects.all()
