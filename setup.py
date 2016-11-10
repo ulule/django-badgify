@@ -2,9 +2,10 @@
 import os
 from setuptools import setup, find_packages
 
-root = os.path.abspath(os.path.dirname(__file__))
 
-with open(os.path.join(root, 'README.rst')) as f:
+ROOT = os.path.abspath(os.path.dirname(__file__))
+
+with open(os.path.join(ROOT, 'README.rst')) as f:
     README = f.read()
 
 setup(
@@ -19,7 +20,7 @@ setup(
     zip_safe=False,
     include_package_data=True,
     install_requires=[
-        'Pillow==2.4.0',
+        'Pillow',
         'pytz',
         'six',
     ],
@@ -31,11 +32,10 @@ setup(
         'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
         'Topic :: Utilities',
     ]
 )

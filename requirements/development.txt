@@ -1,7 +1,8 @@
 -r base.txt
 -r test.txt
 
-Django==1.9
+Django==1.10
 Sphinx
 
 tox
+tox-pyenv

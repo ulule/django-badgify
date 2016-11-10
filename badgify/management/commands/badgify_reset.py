@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from optparse import make_option
-
 from django.core.management.base import BaseCommand
 
 from badgify.commands import reset_awards
@@ -11,21 +9,24 @@ class Command(BaseCommand):
     """
     Commands that resets awards.
     """
-    help = 'Resets awards.'
+    help = 'Resets awards'
 
-    option_list = BaseCommand.option_list + (
+    def add_arguments(self, parser):
+        """
+        Command arguments.
+        """
+        parser.add_argument('--badges',
+                            action='store',
+                            dest='badges',
+                            type=str)
 
-        make_option('--badges',
-            action='store',
-            dest='badges',
-            type='string'),
+        parser.add_argument('--exclude-badges',
+                            action='store',
+                            dest='exclude_badges',
+                            type=str)
 
-        make_option('--exclude-badges',
-            action='store',
-            dest='exclude_badges',
-            type='string'),
-    )
-
-    def handle(self, *args, **options):
-        options = sanitize_command_options(options)
-        reset_awards(**options)
+    def handle(self, **options):
+        """
+        Command handler.
+        """
+        reset_awards(**sanitize_command_options(options))
