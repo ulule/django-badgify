@@ -2,8 +2,6 @@
 import logging
 import random
 
-from optparse import make_option
-
 from django.core import management
 from django.core.management.base import BaseCommand
 from django.db import DEFAULT_DB_ALIAS, IntegrityError
@@ -24,12 +22,18 @@ class Command(BaseCommand):
     """
     help = u'Create fixtures'
 
-    option_list = BaseCommand.option_list + (
-        make_option('--flushdb',
-            action='store_true',
-            dest='flushdb'),)
+    def add_arguments(self, parser):
+        """
+        Command arguments.
+        """
+        parser.add_argument('--flushdb',
+                            action='store_true',
+                            dest='flushdb')
 
-    def handle(self, *args, **options):
+    def handle(self, **options):
+        """
+        Command handler.
+        """
         self.flushdb = options.get('flushdb')
         self._pre_tasks()
         self._create_users()
@@ -37,12 +41,19 @@ class Command(BaseCommand):
         self._create_awards()
 
     def _pre_tasks(self):
+        """
+        Pre-tasks handler.
+        """
         if self.flushdb:
             management.call_command('flush', verbosity=0, interactive=False)
             logger.info('Flushed database')
 
     def _create_users(self):
+        """
+        Creates users.
+        """
         rn = RandomNicknames()
+
         for name in rn.random_nicks(count=50):
             username = '%s%d' % (slugify(name), random.randrange(1, 99))
             user = User.objects.create_user(
@@ -52,7 +63,11 @@ class Command(BaseCommand):
             logger.info('Created user: %s', user.username)
 
     def _create_badges(self):
+        """
+        Creates badges.
+        """
         rn = RandomNicknames()
+
         for name in rn.random_nicks(count=20):
             slug = slugify(name)
             badge = Badge.objects.create(
@@ -62,7 +77,11 @@ class Command(BaseCommand):
             logger.info('Created badge: %s', badge.name)
 
     def _create_awards(self):
+        """
+        Creates awards.
+        """
         users = User.objects.all()
+
         for user in users:
             everyone_badge = Badge.objects.last()
             badge = Badge.objects.order_by('?')[0]

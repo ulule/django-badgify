@@ -18,7 +18,7 @@ create_fixtures:
 	. .venv/bin/activate && ENV=example python manage.py create_fixtures
 
 serve: .venv
-	. .venv/bin/activate && ENV=example python manage.py migrate
+	. .venv/bin/activate && ENV=example python manage.py migrate --run-syncdb
 	. .venv/bin/activate && ENV=example python manage.py runserver
 
 release:
