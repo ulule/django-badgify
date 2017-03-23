@@ -6,6 +6,12 @@ import logging
 logger = logging.getLogger('badgify')
 
 
+try:
+    from django.utils.module_loading import autodiscover_modules
+except ImportError:
+    autodiscover_modules = None
+
+
 class BadgifyRegistry(object):
     """
     Badge recipes registry.
@@ -121,13 +127,7 @@ class BadgifyRegistry(object):
 def _autodiscover(recipes):
     import copy
     from django.conf import settings
-
-    try:
-        # py27 / py3 only
-        from importlib import import_module
-    except ImportError:
-        from django.utils.importlib import import_module
-
+    from django.utils.importlib import import_module
     from django.utils.module_loading import module_has_submodule
 
     for app in settings.INSTALLED_APPS:
@@ -145,7 +145,17 @@ registry = BadgifyRegistry()
 
 
 def autodiscover():
-    _autodiscover(registry)
+    """
+    Check all apps in INSTALLED_APPS for stuff related to badgify_recipes.
+
+    For each app, autodiscover imports ``app.badgify_recipes`` if
+    possing, resulting in execution of :py:func:`register()` statements in that
+    module, filling up :py:data:`registry`.
+    """
+    if autodiscover_modules:
+        autodiscover_modules('badgify_recipes')
+    else:
+        _autodiscover(registry)
 
 
 def register(*args, **kwargs):
