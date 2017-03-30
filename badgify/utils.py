@@ -90,7 +90,7 @@ def get_model_string(model_name):
 
     Borrowed from: https://github.com/thoas/django-discussions/blob/master/discussions/utils.py
     """
-    setting_name = 'BADGIFY_%s_MODEL' % model_name.upper().replace('_', '')
+    setting_name = '%s_MODEL' % model_name.upper().replace('_', '')
     class_path = getattr(settings, setting_name, None)
     if not class_path:
         return 'badgify.%s' % model_name
