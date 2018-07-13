@@ -17,11 +17,13 @@ class Award(models.Model):
     user = models.ForeignKey(
         compat.AUTH_USER_MODEL,
         verbose_name=_('user'),
+        on_delete=models.CASCADE,
         related_name='badges')
 
     badge = models.ForeignKey(
         get_model_string('Badge'),
         verbose_name=_('badge'),
+        on_delete=models.CASCADE,
         related_name='awards')
 
     awarded_at = models.DateTimeField(
