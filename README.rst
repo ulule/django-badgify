@@ -384,10 +384,3 @@ Contribute
     # Launch example project
     $ make create_fixtures
     $ make serve
-
-Compatibility
--------------
-
-- python 2.7: Django 1.9, 1.10
-- Python 3.4: Django 1.9, 1.10
-- Python 3.5: Django 1.9, 1.10
