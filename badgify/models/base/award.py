@@ -1,15 +1,10 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 from django.db import models
-from django.utils.encoding import python_2_unicode_compatible
-from django.utils.translation import ugettext_lazy as _
 
 from badgify import compat
+from badgify.compat import gettext_lazy as _
 from badgify.utils import get_model_string
 
 
-@python_2_unicode_compatible
 class Award(models.Model):
     """
     An Award.

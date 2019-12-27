@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from ..recipe import BaseRecipe
 from ..compat import get_user_model
 

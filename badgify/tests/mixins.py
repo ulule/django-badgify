@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*_
-from __future__ import unicode_literals
-
 from random import randrange
 
 from django.utils.text import slugify

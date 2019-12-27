@@ -1,8 +1,8 @@
-# -*- coding: utf-8 -*-
 from django.contrib import admin
 from django.urls import reverse
 from django.utils.html import format_html
-from django.utils.translation import ugettext_lazy as _
+
+from badgify.compat import gettext_lazy as _
 
 from .models import Badge, Award
 from . import settings

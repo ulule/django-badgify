@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from imp import reload
 
 from django.db.models import signals

@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 import logging
 
 logger = logging.getLogger('badgify')
@@ -135,7 +132,7 @@ def _autodiscover(recipes):
         try:
             before_import_recipes = copy.copy(recipes)
             import_module('%s.badgify_recipes' % app)
-        except:
+        except Exception:
             recipes = before_import_recipes
             if module_has_submodule(mod, 'badgify_recipes'):
                 raise
