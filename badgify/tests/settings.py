@@ -1,17 +1,11 @@
-# -*- coding: utf-8 -*-
 import os
-import django
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': '',
-        'USER': '',
-        'PASSWORD': '',
-        'HOST': '',
-        'PORT': '',
+        'NAME': ':memory:',
     }
 }
 
@@ -19,7 +13,14 @@ SITE_ID = 1
 
 DEBUG = True
 
-MIDDLEWARE_CLASSES = ()
+MIDDLEWARE = (
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+)
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -27,6 +28,7 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.sites',
+    'django.contrib.messages',
     'badgify',
     'badgify.tests',
 ]

@@ -1,7 +1,7 @@
 -r base.txt
 -r test.txt
 
-Django==1.10
+Django
 Sphinx
 
 tox

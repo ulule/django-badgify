@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 import logging
 
 from django.db import DEFAULT_DB_ALIAS, IntegrityError

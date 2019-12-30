@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import django
 from django.conf import settings
 
@@ -15,3 +14,9 @@ def get_user_model():
     else:
         from django.contrib.auth.models import User
     return User
+
+
+try:
+    from django.utils.translation import ugettext_lazy as gettext_lazy
+except ImportError:
+    from django.utils.translation import gettext_lazy  # noqa
