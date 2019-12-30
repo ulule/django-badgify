@@ -2,7 +2,6 @@ import os
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 
-DATABASE_ENGINE = 'sqlite3'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
