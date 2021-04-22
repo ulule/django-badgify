@@ -17,6 +17,6 @@ def get_user_model():
 
 
 try:
-    from django.utils.translation import ugettext_lazy as gettext_lazy
+    from django.utils.translation import gettext_lazy as gettext_lazy
 except ImportError:
     from django.utils.translation import gettext_lazy  # noqa
