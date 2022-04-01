@@ -5,10 +5,6 @@ This Django application will help you to create your own badge system on your we
 
 It has been used on `Ulule <http://www.ulule.com>`_ to create our own `badge mechanism <http://www.ulule.com/badges/>`_.
 
-.. image:: https://secure.travis-ci.org/ulule/django-badgify.png?branch=master
-    :alt: Build Status
-    :target: http://travis-ci.org/ulule/django-badgify
-
 Installation
 ------------
 

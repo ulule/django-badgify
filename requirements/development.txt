@@ -2,7 +2,3 @@
 -r test.txt
 
 Django
-Sphinx
-
-tox
-tox-pyenv
