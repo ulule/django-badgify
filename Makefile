@@ -22,7 +22,9 @@ serve: .venv
 	. .venv/bin/activate && ENV=example python manage.py runserver
 
 release:
-	python setup.py sdist register upload -s
+	rm -rf dist/*
+	python setup.py sdist
+	twine upload dist/*
 
 delpyc:
 	find . -name '*.pyc' -delete
