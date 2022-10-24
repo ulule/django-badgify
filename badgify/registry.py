@@ -128,6 +128,9 @@ def _autodiscover(recipes):
     from django.utils.module_loading import module_has_submodule
 
     for app in settings.INSTALLED_APPS:
+        if app.startswith("badgify"):
+            continue
+
         mod = import_module(app)
         try:
             before_import_recipes = copy.copy(recipes)
